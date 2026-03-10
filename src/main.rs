@@ -10,7 +10,7 @@ use clap::Parser;
 fn main() {
     
     if let Err(e) = run() {
-        eprintln!("{} {}", "Erro:".red().bold(), e);
+        eprintln!("{} {}", "Error:".red().bold(), e);
         std::process::exit(1);
     }
 }
@@ -18,7 +18,7 @@ fn main() {
 fn run() -> Result<(), String> {
 
     wallpaper::init()?;
-    
+
     let app = Cli::parse();
 
     match app.command {

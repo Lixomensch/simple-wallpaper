@@ -18,7 +18,7 @@ pub fn set(path: &Path) -> Result<PathBuf, String> {
 pub fn random() -> Result<PathBuf, String> {
     let dir = wallpaper::wallpaper_dir()?;
     let img = wallpaper::random_image(&dir).ok_or(
-        "Nenhuma imagem encontrada. Adicione imagens em `swp path` primeiro.",
+        "No image found. Add images to `swp path` first.",
     )?;
     backends::apply(&img)?;
     Ok(img)
@@ -37,8 +37,11 @@ pub fn handle_set(name: Vec<String>) -> Result<(), String> {
     
     println!(
         "{} {}",
-        "✔ Wallpaper aplicado:".green().bold(),
-        applied.display()
+        "Wallpaper applied:".green().bold(),
+        applied
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("?")
     );
 
     Ok(())
@@ -48,13 +51,13 @@ pub fn handle_random() -> Result<(), String> {
 
     let dir = wallpaper::wallpaper_dir()?;
     let img = wallpaper::random_image(&dir).ok_or(
-        "Nenhuma imagem encontrada. Adicione imagens em `swp path` primeiro.",
+        "No image found. Add images to `swp path` first.",
     )?;
     backends::apply(&img)?;
    
     println!(
         "{} {}",
-        "✔ Wallpaper aleatório:".green().bold(),
+        "Random wallpaper:".green().bold(),
         img
             .file_name()
             .and_then(|n| n.to_str())
@@ -69,8 +72,8 @@ pub fn parse_interval(interval: &str) -> Result<Duration, String> {
 
     if !"smh".contains(last) {
         return Err(format!(
-            "Formato de intervalo inválido: '{}'. \
-             Use um número seguido de s, m ou h (ex: 30s, 10m, 2h).",
+            "Invalid interval format: '{}'. \
+             Use a number followed by s, m, or h (e.g., 30s, 10m, 2h).",
             interval
         ));
     }
@@ -78,13 +81,13 @@ pub fn parse_interval(interval: &str) -> Result<Duration, String> {
     let num_part = &interval[..interval.len() - 1];
     let n = num_part.parse::<u64>().map_err(|_| {
         format!(
-            "Número inválido em '{}'. Use um inteiro positivo (ex: 30s, 10m, 2h).",
+            "Invalid number in '{}'. Use a positive integer (e.g., 30s, 10m, 2h).",
             interval
         )
     })?;
 
     if n == 0 {
-        return Err("O intervalo deve ser maior que zero.".into());
+        return Err("The interval must be greater than zero.".into());
     }
 
     match last {
@@ -99,23 +102,22 @@ pub fn handle_slideshow(interval: String) -> Result<(), String> {
     let duration = parse_interval(&interval)?;
     
     println!(
-        "{} — intervalo {}  {}",
-        "Slideshow iniciado".cyan().bold(),
+        "{} — interval {}  {}",
+        "Slideshow started".cyan().bold(),
         interval.yellow().bold(),
-        "(Ctrl-C para parar)".dimmed()
+        "(Ctrl-C to stop)".dimmed()
     );
 
     loop {
         match random() {
             Ok(applied) => println!(
-                "  {} {}",
-                "↺".cyan(),
+                "  {}",
                 applied
                     .file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or("?")
             ),
-            Err(e) => eprintln!("  {} {}", "⚠ Erro:".yellow().bold(), e),
+            Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
         }
         thread::sleep(duration);
     }
@@ -134,14 +136,13 @@ pub fn handle_list(plain: bool) -> Result<(), String> {
         }
     } else if images.is_empty() {
         println!(
-            "{} Nenhum wallpaper encontrado. Adicione imagens em:",
+            "{} No wallpaper found. Add images in",
             "!".yellow().bold()
         );
         println!("  {}", dir.display().to_string().cyan());
     } else {
         println!(
-            "{} {} imagem(ns) em {}:",
-            "✔".green().bold(),
+            "{} image(s) in {}:",
             images.len().to_string().yellow().bold(),
             dir.display().to_string().dimmed()
         );

@@ -9,13 +9,13 @@ const EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "webp", "bmp", "avif"];
 pub fn init() -> Result<(), String> {
     let dir = wallpaper_dir()?;
     fs::create_dir_all(&dir)
-        .map_err(|e| format!("Erro ao criar diretório de wallpapers: {e}"))?;
+        .map_err(|e| format!("Error creating wallpapers directory: {e}"))?;
     Ok(())
 }
 
 pub fn wallpaper_dir() -> Result<PathBuf, String> {
     let home = std::env::var("HOME")
-        .map_err(|_| "Variável de ambiente HOME não definida".to_string())?;
+        .map_err(|_| "HOME environment variable not set".to_string())?;
     Ok(PathBuf::from(home).join(".local/share/simple-wallpaper/wallpapers"))
 }
 
@@ -42,8 +42,8 @@ pub fn random_image(dir: &Path) -> Option<PathBuf> {
 }
 
 fn matches_all_words(filename: &str, words: &[&str]) -> bool {
-    let lower = filename.to_lowercase();
-    words.iter().all(|w| lower.contains(*w))
+    let lower_filename = filename.to_lowercase();
+    words.iter().all(|w| lower_filename.contains(&w.to_lowercase()))
 }
 
 pub fn find_by_words(dir: &Path, query: &str) -> Vec<PathBuf> {

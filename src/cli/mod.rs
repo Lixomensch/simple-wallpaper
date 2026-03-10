@@ -13,12 +13,12 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     Set {
-        #[arg(num_args = 0.., value_name = "NOME")]
+        #[arg(num_args = 0.., value_name = "NAME")]
         name: Vec<String>,
     },
     Random,
     Slideshow {
-        #[arg(short, long, default_value = "15m")]
+        #[arg(default_value = "15m")]
         interval: String,
     },
     List {

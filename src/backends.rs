@@ -13,7 +13,7 @@
 //! | X11 (any WM)         | `feh`                        |
 
 use std::path::Path;
-use std::process::Command;
+use std::process::{Command, Stdio};
 
 fn detect_desktop() -> String {
     std::env::var("XDG_CURRENT_DESKTOP")
@@ -40,18 +40,18 @@ pub fn apply(path: &Path) -> Result<(), String> {
         apply_sway(path)
     } else if std::env::var("WAYLAND_DISPLAY").is_ok() {
         apply_swww(path).map_err(|_| {
-            "Ambiente Wayland detectado, mas nenhum backend compatível encontrado. \
-             Instale swww e inicie swww-daemon."
+            "Wayland environment detected, but no compatible backend found. \
+             Install swww and start swww-daemon."
                 .to_string()
         })
     } else if std::env::var("DISPLAY").is_ok() {
         apply_feh(path)
     } else {
         Err(format!(
-            "Ambiente de desktop não reconhecido \
-             (XDG_CURRENT_DESKTOP='{}'). \
-             Ambientes suportados: KDE, GNOME/Cinnamon, Hyprland (swww), \
-             Sway (swaybg), X11 (feh).",
+            "Unrecognized desktop environment \
+            (XDG_CURRENT_DESKTOP='{}'). \
+            Supported environments: KDE, GNOME/Cinnamon, Hyprland (swww), \
+            Sway (swaybg), X11 (feh).",
             std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default()
         ))
     }
@@ -60,11 +60,13 @@ pub fn apply(path: &Path) -> Result<(), String> {
 fn apply_kde(path: &Path) -> Result<(), String> {
     let status = Command::new("plasma-apply-wallpaperimage")
         .arg(path)
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .map_err(|e| {
             format!(
-                "Falha ao executar plasma-apply-wallpaperimage: {e}\n\
-                 Verifique se plasma-workspace está instalado."
+                "Failed to execute plasma-apply-wallpaperimage: {e}\n\
+                 Check if plasma-workspace is installed."
             )
         })?;
 
@@ -72,7 +74,7 @@ fn apply_kde(path: &Path) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "plasma-apply-wallpaperimage falhou (código {:?})",
+            "plasma-apply-wallpaperimage failed (code {:?})",
             status.code()
         ))
     }
@@ -88,12 +90,14 @@ fn apply_gnome(path: &Path) -> Result<(), String> {
             "picture-uri",
             &uri,
         ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
-        .map_err(|e| format!("Falha ao executar gsettings: {e}"))?;
+        .map_err(|e| format!("Failed to execute gsettings: {e}"))?;
 
     if !status.success() {
         return Err(format!(
-            "gsettings falhou (código {:?})",
+            "gsettings failed (code {:?})",
             status.code()
         ));
     }
@@ -105,6 +109,8 @@ fn apply_gnome(path: &Path) -> Result<(), String> {
             "picture-uri-dark",
             &uri,
         ])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status();
 
     Ok(())
@@ -113,11 +119,13 @@ fn apply_gnome(path: &Path) -> Result<(), String> {
 fn apply_swww(path: &Path) -> Result<(), String> {
     let status = Command::new("swww")
         .args(["img", &path.to_string_lossy()])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .map_err(|e| {
             format!(
-                "Falha ao executar swww: {e}\n\
-                 Instale com `sudo pacman -S swww` e inicie `swww-daemon`."
+                "Failed to execute swww: {e}\n\
+                 Install with `sudo pacman -S swww` and start `swww-daemon`."
             )
         })?;
 
@@ -125,23 +133,29 @@ fn apply_swww(path: &Path) -> Result<(), String> {
         Ok(())
     } else {
         Err(format!(
-            "swww falhou (código {:?}). \
-             Certifique-se que swww-daemon está rodando.",
+            "swww failed (code {:?}). \
+             Make sure swww-daemon is running.",
             status.code()
         ))
     }
 }
 
 fn apply_sway(path: &Path) -> Result<(), String> {
-    let _ = Command::new("pkill").args(["-x", "swaybg"]).status();
+    let _ = Command::new("pkill")
+        .args(["-x", "swaybg"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
 
     Command::new("swaybg")
         .args(["-i", &path.to_string_lossy(), "-m", "fill"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .spawn()
         .map_err(|e| {
             format!(
-                "Falha ao executar swaybg: {e}\n\
-                 Instale com `sudo pacman -S swaybg`."
+                "Failed to execute swaybg: {e}\n\
+                 Install with `sudo pacman -S swaybg`."
             )
         })?;
 
@@ -151,17 +165,19 @@ fn apply_sway(path: &Path) -> Result<(), String> {
 fn apply_feh(path: &Path) -> Result<(), String> {
     let status = Command::new("feh")
         .args(["--bg-fill", &path.to_string_lossy()])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
         .status()
         .map_err(|e| {
             format!(
-                "Falha ao executar feh: {e}\n\
-                 Instale com `sudo pacman -S feh`."
+                "Failed to execute feh: {e}\n\
+                 Install with `sudo pacman -S feh`."
             )
         })?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!("feh falhou (código {:?})", status.code()))
+        Err(format!("feh failed (code {:?})", status.code()))
     }
 }
