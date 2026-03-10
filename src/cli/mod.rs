@@ -1,3 +1,6 @@
+pub mod handlers;
+pub mod cmd;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
