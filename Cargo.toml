@@ -8,6 +8,8 @@ name = "swp"
 path = "src/main.rs"
 
 [dependencies]
-clap = { version = "4.5.53", features = ["derive"] }
-rand = "0.9.2"
-walkdir = "2.5.0"
+clap     = { version = "4.5.53", features = ["derive"] }
+colored  = "3.1.1"
+inquire  = "0.9.4"
+rand     = "0.10.0"
+walkdir  = "2.5.0"
