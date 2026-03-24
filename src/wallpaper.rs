@@ -4,18 +4,19 @@ use std::path::{Path, PathBuf};
 use rand::prelude::IndexedRandom;
 use walkdir::WalkDir;
 
+use crate::error::SwpError;
+
 const EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "webp", "bmp", "avif"];
 
-pub fn init() -> Result<(), String> {
+pub fn init() -> Result<(), SwpError> {
     let dir = wallpaper_dir()?;
     fs::create_dir_all(&dir)
-        .map_err(|e| format!("Error creating wallpapers directory: {e}"))?;
+        .map_err(|source| SwpError::CreateWallpapersDir { source })?;
     Ok(())
 }
 
-pub fn wallpaper_dir() -> Result<PathBuf, String> {
-    let home = std::env::var("HOME")
-        .map_err(|_| "HOME environment variable not set".to_string())?;
+pub fn wallpaper_dir() -> Result<PathBuf, SwpError> {
+    let home = std::env::var("HOME").map_err(|_| SwpError::HomeEnvMissing)?;
     Ok(PathBuf::from(home).join(".local/share/simple-wallpaper/wallpapers"))
 }
 

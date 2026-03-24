@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use crate::core::wallpaper;
+use crate::error::{QueryError, SwpError};
 
 #[derive(Debug)]
 pub enum SetInputResolution {
@@ -8,12 +9,12 @@ pub enum SetInputResolution {
     MultipleMatches { query: String, matches: Vec<PathBuf> },
 }
 
-pub fn resolve_set_input(input: &str) -> Result<SetInputResolution, String> {
+pub fn resolve_set_input(input: &str) -> Result<SetInputResolution, SwpError> {
     let dir = wallpaper::wallpaper_dir()?;
     resolve_set_input_in_dir(&dir, input)
 }
 
-pub fn resolve_set_input_in_dir(dir: &Path, input: &str) -> Result<SetInputResolution, String> {
+pub fn resolve_set_input_in_dir(dir: &Path, input: &str) -> Result<SetInputResolution, SwpError> {
     let literal = PathBuf::from(input);
     if literal.exists() {
         return Ok(SetInputResolution::Resolved(literal));
@@ -22,11 +23,10 @@ pub fn resolve_set_input_in_dir(dir: &Path, input: &str) -> Result<SetInputResol
     let mut matches = wallpaper::find_by_words(dir, input);
 
     match matches.len() {
-        0 => Err(format!(
-            "No wallpaper found for '{}'.\n\
-             Use `swp list` to see available ones.",
-            input
-        )),
+        0 => Err(QueryError::NoMatches {
+            query: input.to_string(),
+        }
+        .into()),
         1 => Ok(SetInputResolution::Resolved(matches.remove(0))),
         _ => {
             matches.sort();
@@ -45,6 +45,7 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{resolve_set_input_in_dir, SetInputResolution};
+    use crate::error::{QueryError, SwpError};
 
     fn test_dir() -> PathBuf {
         let stamp = SystemTime::now()
@@ -81,10 +82,12 @@ mod tests {
 
         let err = resolve_set_input_in_dir(&dir, "does-not-exist")
             .expect_err("non-matching query should fail");
-        assert!(
-            err.contains("No wallpaper found for 'does-not-exist'."),
-            "unexpected error: {err}"
-        );
+        match err {
+            SwpError::Query(QueryError::NoMatches { query }) => {
+                assert_eq!(query, "does-not-exist")
+            }
+            other => panic!("unexpected error variant: {other}"),
+        }
 
         fs::remove_dir_all(&dir).expect("temp test dir should be removable");
     }

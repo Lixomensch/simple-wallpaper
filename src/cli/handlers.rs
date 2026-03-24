@@ -4,8 +4,9 @@ use colored::Colorize;
 use crate::core::operations;
 use crate::core::slideshow;
 use crate::cli::cmd::{interactive_pick, resolve_set_input};
+use crate::error::SwpError;
 
-pub fn handle_set(name: Vec<String>) -> Result<(), String> {
+pub fn handle_set(name: Vec<String>) -> Result<(), SwpError> {
     let query = name.join(" ");
 
     let path = if query.trim().is_empty() {
@@ -28,7 +29,7 @@ pub fn handle_set(name: Vec<String>) -> Result<(), String> {
     Ok(())
 }
 
-pub fn handle_random() -> Result<(), String> {
+pub fn handle_random() -> Result<(), SwpError> {
     let img = operations::random_wallpaper()?;
    
     println!(
@@ -43,7 +44,7 @@ pub fn handle_random() -> Result<(), String> {
     Ok(())
 }
 
-pub fn handle_slideshow(interval: String) -> Result<(), String> {
+pub fn handle_slideshow(interval: String) -> Result<(), SwpError> {
     let duration = slideshow::parse_interval(&interval)?;
     
     println!(
@@ -68,7 +69,7 @@ pub fn handle_slideshow(interval: String) -> Result<(), String> {
     }
 }
 
-pub fn handle_list(plain: bool) -> Result<(), String> {
+pub fn handle_list(plain: bool) -> Result<(), SwpError> {
     let (dir, images) = operations::list_wallpapers()?;
 
     if plain {
@@ -99,7 +100,7 @@ pub fn handle_list(plain: bool) -> Result<(), String> {
     Ok(())
 }
 
-pub fn handle_path() -> Result<(), String> {
+pub fn handle_path() -> Result<(), SwpError> {
     let dir = operations::wallpaper_directory()?;
     println!("{}", dir.display());
     Ok(())

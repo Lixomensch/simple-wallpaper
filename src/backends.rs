@@ -15,6 +15,8 @@
 use std::path::Path;
 use std::process::{Command, Stdio};
 
+use crate::error::{BackendError, SwpError};
+
 fn detect_desktop() -> String {
     std::env::var("XDG_CURRENT_DESKTOP")
         .or_else(|_| std::env::var("DESKTOP_SESSION"))
@@ -22,7 +24,7 @@ fn detect_desktop() -> String {
         .to_uppercase()
 }
 
-pub fn apply(path: &Path) -> Result<(), String> {
+pub fn apply(path: &Path) -> Result<(), SwpError> {
     let desktop = detect_desktop();
 
     if desktop.contains("KDE") {
@@ -39,48 +41,41 @@ pub fn apply(path: &Path) -> Result<(), String> {
     } else if desktop.contains("SWAY") {
         apply_sway(path)
     } else if std::env::var("WAYLAND_DISPLAY").is_ok() {
-        apply_swww(path).map_err(|_| {
-            "Wayland environment detected, but no compatible backend found. \
-             Install swww and start swww-daemon."
-                .to_string()
-        })
+        apply_swww(path).map_err(|_| BackendError::WaylandNoCompatibleBackend.into())
     } else if std::env::var("DISPLAY").is_ok() {
         apply_feh(path)
     } else {
-        Err(format!(
-            "Unrecognized desktop environment \
-            (XDG_CURRENT_DESKTOP='{}'). \
-            Supported environments: KDE, GNOME/Cinnamon, Hyprland (swww), \
-            Sway (swaybg), X11 (feh).",
-            std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default()
-        ))
+        Err(BackendError::UnknownDesktop {
+            desktop: std::env::var("XDG_CURRENT_DESKTOP").unwrap_or_default(),
+        }
+        .into())
     }
 }
 
-fn apply_kde(path: &Path) -> Result<(), String> {
+fn apply_kde(path: &Path) -> Result<(), SwpError> {
     let status = Command::new("plasma-apply-wallpaperimage")
         .arg(path)
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| {
-            format!(
-                "Failed to execute plasma-apply-wallpaperimage: {e}\n\
-                 Check if plasma-workspace is installed."
-            )
+        .map_err(|source| BackendError::CommandSpawn {
+            tool: "plasma-apply-wallpaperimage",
+            source,
+            help: "Check if plasma-workspace is installed.",
         })?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!(
-            "plasma-apply-wallpaperimage failed (code {:?})",
-            status.code()
-        ))
+        Err(BackendError::CommandFailed {
+            tool: "plasma-apply-wallpaperimage",
+            code: status.code(),
+        }
+        .into())
     }
 }
 
-fn apply_gnome(path: &Path) -> Result<(), String> {
+fn apply_gnome(path: &Path) -> Result<(), SwpError> {
     let uri = format!("file://{}", path.display());
 
     let status = Command::new("gsettings")
@@ -93,13 +88,18 @@ fn apply_gnome(path: &Path) -> Result<(), String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| format!("Failed to execute gsettings: {e}"))?;
+        .map_err(|source| BackendError::CommandSpawn {
+            tool: "gsettings",
+            source,
+            help: "Check if gsettings is installed and available.",
+        })?;
 
     if !status.success() {
-        return Err(format!(
-            "gsettings failed (code {:?})",
-            status.code()
-        ));
+        return Err(BackendError::CommandFailed {
+            tool: "gsettings",
+            code: status.code(),
+        }
+        .into());
     }
 
     let _ = Command::new("gsettings")
@@ -116,31 +116,29 @@ fn apply_gnome(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-fn apply_swww(path: &Path) -> Result<(), String> {
+fn apply_swww(path: &Path) -> Result<(), SwpError> {
     let status = Command::new("swww")
         .args(["img", &path.to_string_lossy()])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| {
-            format!(
-                "Failed to execute swww: {e}\n\
-                 Install with `sudo pacman -S swww` and start `swww-daemon`."
-            )
+        .map_err(|source| BackendError::CommandSpawn {
+            tool: "swww",
+            source,
+            help: "Install with `sudo pacman -S swww` and start `swww-daemon`.",
         })?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!(
-            "swww failed (code {:?}). \
-             Make sure swww-daemon is running.",
-            status.code()
-        ))
+        Err(BackendError::SwwwFailed {
+            code: status.code(),
+        }
+        .into())
     }
 }
 
-fn apply_sway(path: &Path) -> Result<(), String> {
+fn apply_sway(path: &Path) -> Result<(), SwpError> {
     let _ = Command::new("pkill")
         .args(["-x", "swaybg"])
         .stdout(Stdio::null())
@@ -152,32 +150,34 @@ fn apply_sway(path: &Path) -> Result<(), String> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .spawn()
-        .map_err(|e| {
-            format!(
-                "Failed to execute swaybg: {e}\n\
-                 Install with `sudo pacman -S swaybg`."
-            )
+        .map_err(|source| BackendError::CommandSpawn {
+            tool: "swaybg",
+            source,
+            help: "Install with `sudo pacman -S swaybg`.",
         })?;
 
     Ok(())
 }
 
-fn apply_feh(path: &Path) -> Result<(), String> {
+fn apply_feh(path: &Path) -> Result<(), SwpError> {
     let status = Command::new("feh")
         .args(["--bg-fill", &path.to_string_lossy()])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()
-        .map_err(|e| {
-            format!(
-                "Failed to execute feh: {e}\n\
-                 Install with `sudo pacman -S feh`."
-            )
+        .map_err(|source| BackendError::CommandSpawn {
+            tool: "feh",
+            source,
+            help: "Install with `sudo pacman -S feh`.",
         })?;
 
     if status.success() {
         Ok(())
     } else {
-        Err(format!("feh failed (code {:?})", status.code()))
+        Err(BackendError::CommandFailed {
+            tool: "feh",
+            code: status.code(),
+        }
+        .into())
     }
 }

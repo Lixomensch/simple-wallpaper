@@ -1,6 +1,7 @@
 use colored::Colorize;
 use clap::Parser;
 use simple_wallpaper::cli::{Cli, Commands};
+use simple_wallpaper::error::SwpError;
 use simple_wallpaper::{cli, core};
 
 fn main() {
@@ -11,7 +12,7 @@ fn main() {
     }
 }
 
-fn run() -> Result<(), String> {
+fn run() -> Result<(), SwpError> {
     core::wallpaper::init()?;
 
     let app = Cli::parse();

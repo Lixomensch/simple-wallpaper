@@ -1,26 +1,24 @@
 use std::time::Duration;
 
-pub fn parse_interval(interval: &str) -> Result<Duration, String> {
+use crate::error::{IntervalError, SwpError};
+
+pub fn parse_interval(interval: &str) -> Result<Duration, SwpError> {
     let last = interval.chars().last().unwrap_or('\0');
 
     if !"smh".contains(last) {
-        return Err(format!(
-            "Invalid interval format: '{}'. \
-             Use a number followed by s, m, or h (e.g., 30s, 10m, 2h).",
-            interval
-        ));
+        return Err(IntervalError::InvalidFormat {
+            input: interval.to_string(),
+        }
+        .into());
     }
 
     let num_part = &interval[..interval.len() - 1];
-    let n = num_part.parse::<u64>().map_err(|_| {
-        format!(
-            "Invalid number in '{}'. Use a positive integer (e.g., 30s, 10m, 2h).",
-            interval
-        )
+    let n = num_part.parse::<u64>().map_err(|_| IntervalError::InvalidNumber {
+        input: interval.to_string(),
     })?;
 
     if n == 0 {
-        return Err("The interval must be greater than zero.".into());
+        return Err(IntervalError::ZeroInterval.into());
     }
 
     match last {
@@ -36,6 +34,7 @@ mod tests {
     use std::time::Duration;
 
     use super::parse_interval;
+    use crate::error::{IntervalError, SwpError};
 
     #[test]
     fn parse_valid_second_interval() {
@@ -55,18 +54,31 @@ mod tests {
     #[test]
     fn reject_invalid_suffix() {
         let err = parse_interval("10d").expect_err("invalid suffix should fail");
-        assert!(err.contains("Invalid interval format"), "unexpected error: {err}");
+        match err {
+            SwpError::Interval(IntervalError::InvalidFormat { input }) => {
+                assert_eq!(input, "10d")
+            }
+            other => panic!("unexpected error variant: {other}"),
+        }
     }
 
     #[test]
     fn reject_non_numeric_prefix() {
         let err = parse_interval("xxm").expect_err("non-numeric interval should fail");
-        assert!(err.contains("Invalid number"), "unexpected error: {err}");
+        match err {
+            SwpError::Interval(IntervalError::InvalidNumber { input }) => {
+                assert_eq!(input, "xxm")
+            }
+            other => panic!("unexpected error variant: {other}"),
+        }
     }
 
     #[test]
     fn reject_zero_value() {
         let err = parse_interval("0s").expect_err("zero interval should fail");
-        assert_eq!(err, "The interval must be greater than zero.");
+        match err {
+            SwpError::Interval(IntervalError::ZeroInterval) => {}
+            other => panic!("unexpected error variant: {other}"),
+        }
     }
 }
