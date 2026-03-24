@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
-use crate::wallpaper::{find_by_words, list_images, wallpaper_dir};
+use crate::core::query::{self, SetInputResolution};
+use crate::core::wallpaper::{list_images, wallpaper_dir};
 
 pub fn pick_from_entries(entries: Vec<(String, PathBuf)>, prompt: &str) -> Result<PathBuf, String> {
     let count = entries.len();
@@ -63,24 +64,10 @@ pub fn pick_from_matches(matches: Vec<PathBuf>, query: &str) -> Result<PathBuf, 
 }
 
 pub fn resolve_set_input(input: &str) -> Result<PathBuf, String> {
-    let literal = PathBuf::from(input);
-    if literal.exists() {
-        return Ok(literal);
-    }
-
-    let dir = wallpaper_dir()?;
-    let mut matches = find_by_words(&dir, input);
-
-    match matches.len() {
-        0 => Err(format!(
-            "No wallpaper found for '{}'.\n\
-             Use `swp list` to see available ones.",
-            input
-        )),
-        1 => Ok(matches.remove(0)),
-        _ => {
-            matches.sort();
-            pick_from_matches(matches, input)
+    match query::resolve_set_input(input)? {
+        SetInputResolution::Resolved(path) => Ok(path),
+        SetInputResolution::MultipleMatches { query, matches } => {
+            pick_from_matches(matches, &query)
         }
     }
 }

@@ -1,11 +1,7 @@
 use colored::Colorize;
-
-mod backends;
-mod wallpaper;
-mod cli;
-
-use cli::{Cli, Commands};
 use clap::Parser;
+use simple_wallpaper::cli::{Cli, Commands};
+use simple_wallpaper::{cli, core};
 
 fn main() {
     
@@ -16,8 +12,7 @@ fn main() {
 }
 
 fn run() -> Result<(), String> {
-
-    wallpaper::init()?;
+    core::wallpaper::init()?;
 
     let app = Cli::parse();
 

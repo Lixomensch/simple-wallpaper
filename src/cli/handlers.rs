@@ -1,28 +1,9 @@
 use std::thread;
-use std::path::{Path, PathBuf};
-use std::time::Duration;
 use colored::Colorize;
 
-use crate::backends;
+use crate::core::operations;
+use crate::core::slideshow;
 use crate::cli::cmd::{interactive_pick, resolve_set_input};
-use crate::wallpaper;
-
-pub fn set(path: &Path) -> Result<PathBuf, String> {
-
-    let img = path.to_path_buf();
-
-    backends::apply(&img)?;
-    Ok(img)
-}
-
-pub fn random() -> Result<PathBuf, String> {
-    let dir = wallpaper::wallpaper_dir()?;
-    let img = wallpaper::random_image(&dir).ok_or(
-        "No image found. Add images to `swp path` first.",
-    )?;
-    backends::apply(&img)?;
-    Ok(img)
-}
 
 pub fn handle_set(name: Vec<String>) -> Result<(), String> {
     let query = name.join(" ");
@@ -33,7 +14,7 @@ pub fn handle_set(name: Vec<String>) -> Result<(), String> {
         resolve_set_input(query.trim())?
     };
 
-    let applied = set(&path)?;
+    let applied = operations::apply_wallpaper(&path)?;
     
     println!(
         "{} {}",
@@ -48,12 +29,7 @@ pub fn handle_set(name: Vec<String>) -> Result<(), String> {
 }
 
 pub fn handle_random() -> Result<(), String> {
-
-    let dir = wallpaper::wallpaper_dir()?;
-    let img = wallpaper::random_image(&dir).ok_or(
-        "No image found. Add images to `swp path` first.",
-    )?;
-    backends::apply(&img)?;
+    let img = operations::random_wallpaper()?;
    
     println!(
         "{} {}",
@@ -67,39 +43,8 @@ pub fn handle_random() -> Result<(), String> {
     Ok(())
 }
 
-pub fn parse_interval(interval: &str) -> Result<Duration, String> {
-    let last = interval.chars().last().unwrap_or('\0');
-
-    if !"smh".contains(last) {
-        return Err(format!(
-            "Invalid interval format: '{}'. \
-             Use a number followed by s, m, or h (e.g., 30s, 10m, 2h).",
-            interval
-        ));
-    }
-
-    let num_part = &interval[..interval.len() - 1];
-    let n = num_part.parse::<u64>().map_err(|_| {
-        format!(
-            "Invalid number in '{}'. Use a positive integer (e.g., 30s, 10m, 2h).",
-            interval
-        )
-    })?;
-
-    if n == 0 {
-        return Err("The interval must be greater than zero.".into());
-    }
-
-    match last {
-        's' => Ok(Duration::from_secs(n)),
-        'm' => Ok(Duration::from_secs(n * 60)),
-        'h' => Ok(Duration::from_secs(n * 3600)),
-        _ => unreachable!(),
-    }
-}
-
 pub fn handle_slideshow(interval: String) -> Result<(), String> {
-    let duration = parse_interval(&interval)?;
+    let duration = slideshow::parse_interval(&interval)?;
     
     println!(
         "{} — interval {}  {}",
@@ -109,7 +54,7 @@ pub fn handle_slideshow(interval: String) -> Result<(), String> {
     );
 
     loop {
-        match random() {
+        match operations::random_wallpaper() {
             Ok(applied) => println!(
                 "  {}",
                 applied
@@ -124,9 +69,7 @@ pub fn handle_slideshow(interval: String) -> Result<(), String> {
 }
 
 pub fn handle_list(plain: bool) -> Result<(), String> {
-    let dir = wallpaper::wallpaper_dir()?;
-    let mut images = wallpaper::list_images(&dir);
-    images.sort();
+    let (dir, images) = operations::list_wallpapers()?;
 
     if plain {
         for img in &images {
@@ -157,7 +100,7 @@ pub fn handle_list(plain: bool) -> Result<(), String> {
 }
 
 pub fn handle_path() -> Result<(), String> {
-    let dir = wallpaper::wallpaper_dir()?;
+    let dir = operations::wallpaper_directory()?;
     println!("{}", dir.display());
     Ok(())
 }
