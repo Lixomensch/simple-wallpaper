@@ -30,6 +30,7 @@ pub fn is_image(path: &Path) -> bool {
 pub fn list_images(dir: &Path) -> Vec<PathBuf> {
     WalkDir::new(dir)
         .into_iter()
+    .filter_entry(|e| e.file_name() != "thumbnails")
         .filter_map(Result::ok)
         .map(|e| e.path().to_path_buf())
         .filter(|p| is_image(p))

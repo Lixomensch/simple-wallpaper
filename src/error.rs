@@ -25,9 +25,36 @@ pub enum SwpError {
 
     #[error(transparent)]
     Selection(#[from] SelectionError),
+
+    #[error("Failed to launch GUI: {message}")]
+    GuiLaunch { message: String },
+
+    #[error("Thumbnail error: {message}")]
+    Thumbnail { message: String },
 }
 
-#[derive(Debug, Error)]
+impl Clone for SwpError {
+    fn clone(&self) -> Self {
+        match self {
+            Self::HomeEnvMissing => Self::HomeEnvMissing,
+            Self::CreateWallpapersDir { source } => Self::CreateWallpapersDir {
+                source: io::Error::new(source.kind(), source.to_string()),
+            },
+            Self::Query(err) => Self::Query(err.clone()),
+            Self::Backend(err) => Self::Backend(err.clone()),
+            Self::Interval(err) => Self::Interval(err.clone()),
+            Self::Selection(err) => Self::Selection(err.clone()),
+            Self::GuiLaunch { message } => Self::GuiLaunch {
+                message: message.clone(),
+            },
+            Self::Thumbnail { message } => Self::Thumbnail {
+                message: message.clone(),
+            },
+        }
+    }
+}
+
+#[derive(Debug, Error, Clone)]
 pub enum QueryError {
     #[error("No wallpaper found for '{query}'.\nUse `swp list` to see available ones.")]
     NoMatches { query: String },
@@ -69,7 +96,30 @@ pub enum BackendError {
     },
 }
 
-#[derive(Debug, Error)]
+impl Clone for BackendError {
+    fn clone(&self) -> Self {
+        match self {
+            Self::UnknownDesktop { desktop } => Self::UnknownDesktop {
+                desktop: desktop.clone(),
+            },
+            Self::WaylandNoCompatibleBackend => Self::WaylandNoCompatibleBackend,
+            Self::CommandSpawn { tool, source, help } => Self::CommandSpawn {
+                tool: *tool,
+                source: io::Error::new(source.kind(), source.to_string()),
+                help: *help,
+            },
+            Self::CommandFailed { tool, code } => Self::CommandFailed {
+                tool: *tool,
+                code: *code,
+            },
+            Self::SwwwFailed { code } => Self::SwwwFailed {
+                code: *code,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Error, Clone)]
 pub enum IntervalError {
     #[error("Invalid interval format: '{input}'. Use a number followed by s, m, or h (e.g., 30s, 10m, 2h).")]
     InvalidFormat { input: String },
@@ -81,7 +131,7 @@ pub enum IntervalError {
     ZeroInterval,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum SelectionError {
     #[error("Canceled.")]
     Canceled,

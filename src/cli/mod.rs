@@ -26,4 +26,5 @@ pub enum Commands {
         plain: bool,
     },
     Path,
+    Gui,
 }

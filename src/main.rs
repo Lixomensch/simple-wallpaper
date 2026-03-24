@@ -2,7 +2,7 @@ use colored::Colorize;
 use clap::Parser;
 use simple_wallpaper::cli::{Cli, Commands};
 use simple_wallpaper::error::SwpError;
-use simple_wallpaper::{cli, core};
+use simple_wallpaper::{cli, core, gui};
 
 fn main() {
     
@@ -23,5 +23,6 @@ fn run() -> Result<(), SwpError> {
         Commands::Slideshow { interval } => cli::handlers::handle_slideshow(interval),
         Commands::List { plain } => cli::handlers::handle_list(plain),
         Commands::Path => cli::handlers::handle_path(),
+        Commands::Gui => gui::launch(),
     }
 }

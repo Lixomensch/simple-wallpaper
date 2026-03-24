@@ -1,6 +1,8 @@
 pub mod cli;
 pub mod core;
 pub mod error;
+pub mod gui;
 
 mod backends;
+mod thumbnail;
 mod wallpaper;
