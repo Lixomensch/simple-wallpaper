@@ -10,8 +10,7 @@ const EXTENSIONS: &[&str] = &["jpg", "jpeg", "png", "webp", "bmp", "avif"];
 
 pub fn init() -> Result<(), SwpError> {
     let dir = wallpaper_dir()?;
-    fs::create_dir_all(&dir)
-        .map_err(|source| SwpError::CreateWallpapersDir { source })?;
+    fs::create_dir_all(&dir).map_err(|source| SwpError::CreateWallpapersDir { source })?;
     Ok(())
 }
 
@@ -48,12 +47,12 @@ pub fn random_image(dir: &Path) -> Option<PathBuf> {
     let mut count = 0u64;
 
     image_paths(dir).for_each(|path| {
-            count += 1;
-            // Reservoir sampling: select with probability 1/count
-            if rng.random_range(0..count) == 0 {
-                selected = Some(path);
-            }
-        });
+        count += 1;
+        // Reservoir sampling: select with probability 1/count
+        if rng.random_range(0..count) == 0 {
+            selected = Some(path);
+        }
+    });
 
     selected
 }

@@ -1,12 +1,15 @@
 use std::path::PathBuf;
 
-use uuid::Uuid;
+use crate::core::lists;
 use crate::core::query::{self, SetInputResolution};
 use crate::core::wallpaper::{list_images, wallpaper_dir};
-use crate::core::lists;
 use crate::error::{QueryError, SelectionError, SwpError};
+use uuid::Uuid;
 
-pub fn pick_from_entries(entries: Vec<(String, PathBuf)>, prompt: &str) -> Result<PathBuf, SwpError> {
+pub fn pick_from_entries(
+    entries: Vec<(String, PathBuf)>,
+    prompt: &str,
+) -> Result<PathBuf, SwpError> {
     let count = entries.len();
     let names: Vec<String> = entries.iter().map(|(n, _)| n.clone()).collect();
 
@@ -57,10 +60,7 @@ pub fn interactive_pick() -> Result<PathBuf, SwpError> {
 pub fn pick_from_matches(matches: Vec<PathBuf>, query: &str) -> Result<PathBuf, SwpError> {
     let entries = to_sorted_entries(matches);
     let count = entries.len();
-    let prompt = format!(
-        "{} result(s) for \"{}\" — choose:",
-        count, query
-    );
+    let prompt = format!("{} result(s) for \"{}\" — choose:", count, query);
     pick_from_entries(entries, &prompt)
 }
 

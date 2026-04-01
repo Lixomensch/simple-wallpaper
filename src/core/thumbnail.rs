@@ -21,7 +21,7 @@ pub fn generate_or_get_thumbnail(
     max_height: u32,
 ) -> Result<ThumbnailData, SwpError> {
     let cache_dir = thumbnails_dir()?;
-    
+
     let cache_path = thumbnail_path_for(original_path, max_width, max_height, &cache_dir, "jpg");
 
     if cache_path.exists() {
@@ -40,10 +40,7 @@ pub fn generate_or_get_thumbnail(
     let pixels = resized.to_vec();
 
     resized.save(&cache_path).map_err(|e| SwpError::Thumbnail {
-        message: format!(
-            "Failed to save thumbnail {}: {e}",
-            cache_path.display()
-        ),
+        message: format!("Failed to save thumbnail {}: {e}", cache_path.display()),
     })?;
 
     Ok(ThumbnailData {
@@ -82,15 +79,18 @@ fn thumbnail_path_for(
     let digest = hasher.finish();
 
     // Usando a nova extensão (jpg)
-    cache_dir.join(format!("{:x}_{}x{}.{}", digest, max_width, max_height, extension))
+    cache_dir.join(format!(
+        "{:x}_{}x{}.{}",
+        digest, max_width, max_height, extension
+    ))
 }
 
 fn load_thumbnail_data(path: &Path) -> Result<ThumbnailData, SwpError> {
     let thumb = image::open(path).map_err(|e| SwpError::Thumbnail {
         message: format!("Failed to load thumbnail {}: {e}", path.display()),
     })?;
-    
-    let rgb = thumb.to_rgba8(); 
+
+    let rgb = thumb.to_rgba8();
     let (width, height) = rgb.dimensions();
 
     Ok(ThumbnailData {

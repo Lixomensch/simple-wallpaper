@@ -77,7 +77,9 @@ pub enum BackendError {
     )]
     UnknownDesktop { desktop: String },
 
-    #[error("Wayland environment detected, but no compatible backend found. Install swww and start swww-daemon.")]
+    #[error(
+        "Wayland environment detected, but no compatible backend found. Install swww and start swww-daemon."
+    )]
     WaylandNoCompatibleBackend,
 
     #[error("Failed to execute {tool}: {source}\n{help}")]
@@ -95,9 +97,7 @@ pub enum BackendError {
     },
 
     #[error("swww failed (code {code:?}). Make sure swww-daemon is running.")]
-    SwwwFailed {
-        code: Option<i32>,
-    },
+    SwwwFailed { code: Option<i32> },
 }
 
 impl Clone for BackendError {
@@ -116,16 +116,16 @@ impl Clone for BackendError {
                 tool: *tool,
                 code: *code,
             },
-            Self::SwwwFailed { code } => Self::SwwwFailed {
-                code: *code,
-            },
+            Self::SwwwFailed { code } => Self::SwwwFailed { code: *code },
         }
     }
 }
 
 #[derive(Debug, Error, Clone)]
 pub enum IntervalError {
-    #[error("Invalid interval format: '{input}'. Use a number followed by s, m, or h (e.g., 30s, 10m, 2h).")]
+    #[error(
+        "Invalid interval format: '{input}'. Use a number followed by s, m, or h (e.g., 30s, 10m, 2h)."
+    )]
     InvalidFormat { input: String },
 
     #[error("Invalid number in '{input}'. Use a positive integer (e.g., 30s, 10m, 2h).")]

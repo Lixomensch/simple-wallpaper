@@ -2,11 +2,11 @@ use colored::Colorize;
 use uuid::Uuid;
 
 use crate::cli::ListsCommands;
+use crate::cli::cmd::{interactive_pick, resolve_set_input};
 use crate::core::lists;
 use crate::core::lists_play;
 use crate::core::operations;
 use crate::core::wallpaper;
-use crate::cli::cmd::{interactive_pick, resolve_set_input};
 use crate::error::{ListError, SwpError};
 
 fn print_applied(prefix: &str, path: &std::path::Path) {
@@ -49,10 +49,7 @@ pub fn handle_wallpapers(plain: bool) -> Result<(), SwpError> {
             }
         }
     } else if images.is_empty() {
-        println!(
-            "{} No wallpaper found. Add images in",
-            "!".yellow().bold()
-        );
+        println!("{} No wallpaper found. Add images in", "!".yellow().bold());
         println!("  {}", dir.display().to_string().cyan());
     } else {
         println!(
@@ -84,9 +81,7 @@ pub fn handle_lists(command: Option<ListsCommands>) -> Result<(), SwpError> {
         Some(ListsCommands::Show { name, plain }) => handle_lists_show(name, plain),
         Some(ListsCommands::Add { name, wallpapers }) => handle_lists_add(name, wallpapers),
         Some(ListsCommands::Remove { name, wallpapers }) => handle_lists_remove(name, wallpapers),
-        Some(ListsCommands::Play { name, interval }) => {
-            handle_lists_play(name, interval)
-        }
+        Some(ListsCommands::Play { name, interval }) => handle_lists_play(name, interval),
     }
 }
 
@@ -159,7 +154,10 @@ pub fn handle_lists_add(name: String, wallpapers: Vec<String>) -> Result<(), Swp
     let added = match lists::add_wallpapers_by_paths(&name, &paths) {
         Ok(added) => added,
         Err(SwpError::List(ListError::AlreadyInList { .. })) => {
-            println!("{}", "The wallpaper is already on the list.".yellow().bold());
+            println!(
+                "{}",
+                "The wallpaper is already on the list.".yellow().bold()
+            );
             return Ok(());
         }
         Err(err) => return Err(err),

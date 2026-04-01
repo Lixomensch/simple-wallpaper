@@ -12,8 +12,7 @@ pub fn apply_wallpaper(path: &Path) -> Result<PathBuf, SwpError> {
 
 pub fn random_wallpaper() -> Result<PathBuf, SwpError> {
     let dir = wallpaper::wallpaper_dir()?;
-    let img = wallpaper::random_image(&dir)
-        .ok_or(QueryError::NoImagesFound)?;
+    let img = wallpaper::random_image(&dir).ok_or(QueryError::NoImagesFound)?;
     backends::apply(&img)?;
     Ok(img)
 }

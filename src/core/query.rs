@@ -6,7 +6,10 @@ use crate::error::{QueryError, SwpError};
 #[derive(Debug)]
 pub enum SetInputResolution {
     Resolved(PathBuf),
-    MultipleMatches { query: String, matches: Vec<PathBuf> },
+    MultipleMatches {
+        query: String,
+        matches: Vec<PathBuf>,
+    },
 }
 
 pub fn resolve_set_input(input: &str) -> Result<SetInputResolution, SwpError> {
@@ -46,7 +49,7 @@ mod tests {
     use std::path::PathBuf;
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{resolve_set_input_in_dir, SetInputResolution};
+    use super::{SetInputResolution, resolve_set_input_in_dir};
     use crate::error::{QueryError, SwpError};
 
     fn test_dir() -> PathBuf {
@@ -100,8 +103,8 @@ mod tests {
         let file = dir.join("hello-world.png");
         fs::write(&file, b"x").expect("test file should be writable");
 
-        let result = resolve_set_input_in_dir(&dir, "hello world")
-            .expect("matching query should resolve");
+        let result =
+            resolve_set_input_in_dir(&dir, "hello world").expect("matching query should resolve");
 
         match result {
             SetInputResolution::Resolved(path) => assert_eq!(path, file),

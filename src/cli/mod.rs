@@ -1,5 +1,5 @@
-pub mod handlers;
 pub mod cmd;
+pub mod handlers;
 
 use clap::{Parser, Subcommand};
 

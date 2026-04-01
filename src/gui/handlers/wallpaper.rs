@@ -1,25 +1,22 @@
-//! Wallpaper handler: manages loading, applying, and thumbnail generation.
-
-use std::path::PathBuf;
+use crate::gui::message::WallpaperMessage;
+use crate::gui::state::{ThumbnailState, WallpaperItem, WallpaperState};
 use iced::Task;
 use iced::widget::image::Handle;
+use std::path::PathBuf;
 
-use crate::gui::message::WallpaperMessage;
-use crate::gui::state::{WallpaperState, ThumbnailState, WallpaperItem};
-
-/// Update handler for wallpaper messages.
 pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<WallpaperMessage> {
     match message {
         WallpaperMessage::LoadWallpapers => {
             state.is_loading_list = true;
+
             state.error_message = None;
+
             state.items.clear();
+
             state.status_message = "Loading wallpapers...".to_string();
 
             Task::perform(
-                async move {
-                    crate::core::async_bridge::list_wallpapers_async().await
-                },
+                async move { crate::core::async_bridge::list_wallpapers_async().await },
                 WallpaperMessage::WallpapersLoaded,
             )
         }
@@ -38,15 +35,19 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
                         })
                         .collect();
 
-                    state.status_message =
-                        format!("Loaded {} wallpaper(s).", state.items.len());
+                    state.status_message = format!("Loaded {} wallpaper(s).", state.items.len());
+
                     state.error_message = None;
+
                     Task::done(WallpaperMessage::GenerateNextThumbnail)
                 }
                 Err(err) => {
                     state.items.clear();
+
                     state.status_message = "Failed to load wallpapers.".to_string();
+
                     state.error_message = Some(err.to_string());
+
                     Task::none()
                 }
             }
@@ -59,6 +60,7 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
 
             if let Some(item) = pending {
                 item.thumb_state = ThumbnailState::Loading;
+
                 return Task::done(WallpaperMessage::GenerateThumbnail(item.path.clone()));
             }
 
@@ -66,24 +68,29 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
         }
         WallpaperMessage::GenerateThumbnail(path) => {
             let path_for_loaded = path.clone();
+
             let path_for_failed = path.clone();
 
             Task::perform(
                 async move {
-                    crate::core::async_bridge::generate_thumbnail_async(path.as_path(), 256, 160).await
+                    crate::core::async_bridge::generate_thumbnail_async(path.as_path(), 256, 160)
+                        .await
                 },
                 move |result| match result {
                     Ok(data) => WallpaperMessage::ThumbnailLoaded(
                         path_for_loaded.clone(),
                         Handle::from_rgba(data.width, data.height, data.pixels),
                     ),
-                    Err(err) => WallpaperMessage::ThumbnailFailed(path_for_failed.clone(), err.to_string()),
+                    Err(err) => {
+                        WallpaperMessage::ThumbnailFailed(path_for_failed.clone(), err.to_string())
+                    }
                 },
             )
         }
         WallpaperMessage::ThumbnailLoaded(path, handle) => {
             if let Some(item) = state.items.iter_mut().find(|item| item.path == path) {
                 item.thumbnail = Some(handle);
+
                 item.thumb_state = ThumbnailState::Ready;
             }
 
@@ -92,6 +99,7 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
         WallpaperMessage::ThumbnailFailed(path, err) => {
             if let Some(item) = state.items.iter_mut().find(|item| item.path == path) {
                 item.thumbnail = None;
+
                 item.thumb_state = ThumbnailState::Failed(err);
             }
 
@@ -99,26 +107,27 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
         }
         WallpaperMessage::ApplyRandom => {
             state.is_applying = true;
+
             state.error_message = None;
+
             state.status_message = "Applying random wallpaper...".to_string();
 
             Task::perform(
-                async move {
-                    crate::core::async_bridge::random_wallpaper_async().await
-                },
+                async move { crate::core::async_bridge::random_wallpaper_async().await },
                 WallpaperMessage::WallpaperApplied,
             )
         }
         WallpaperMessage::ApplySpecific(path) => {
             state.is_applying = true;
+
             state.selected = Some(path.clone());
+
             state.error_message = None;
+
             state.status_message = format!("Applying {}...", display_name(&path));
 
             Task::perform(
-                async move {
-                    crate::core::async_bridge::apply_wallpaper_async(path.as_path()).await
-                },
+                async move { crate::core::async_bridge::apply_wallpaper_async(path.as_path()).await },
                 WallpaperMessage::WallpaperApplied,
             )
         }
@@ -128,12 +137,16 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
             match result {
                 Ok(path) => {
                     state.status_message = format!("Applied: {}", display_name(&path));
+
                     state.error_message = None;
+
                     Task::none()
                 }
                 Err(err) => {
                     state.status_message = "Failed to apply wallpaper.".to_string();
+
                     state.error_message = Some(err.to_string());
+
                     Task::none()
                 }
             }
@@ -141,7 +154,6 @@ pub fn update(state: &mut WallpaperState, message: WallpaperMessage) -> Task<Wal
     }
 }
 
-/// Extract display name from a path (filename only).
 fn display_name(path: &PathBuf) -> String {
     path.file_name()
         .and_then(|n| n.to_str())

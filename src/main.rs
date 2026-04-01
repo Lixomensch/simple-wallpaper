@@ -1,11 +1,10 @@
-use colored::Colorize;
 use clap::Parser;
+use colored::Colorize;
 use simple_wallpaper::cli::{Cli, Commands};
 use simple_wallpaper::error::SwpError;
 use simple_wallpaper::{cli, core, gui};
 
 fn main() {
-    
     if let Err(e) = run() {
         eprintln!("{} {}", "Error:".red().bold(), e);
         std::process::exit(1);

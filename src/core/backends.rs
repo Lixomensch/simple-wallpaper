@@ -79,12 +79,7 @@ fn apply_gnome(path: &Path) -> Result<(), SwpError> {
     let uri = format!("file://{}", path.display());
 
     let status = Command::new("gsettings")
-        .args([
-            "set",
-            "org.gnome.desktop.background",
-            "picture-uri",
-            &uri,
-        ])
+        .args(["set", "org.gnome.desktop.background", "picture-uri", &uri])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()

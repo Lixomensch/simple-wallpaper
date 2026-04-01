@@ -146,10 +146,12 @@ where
         message: format!("failed to read {}: {e}", path.display()),
     })?;
 
-    serde_json::from_str(&content).map_err(|e| ListError::Storage {
-        message: format!("failed to parse {}: {e}", path.display()),
-    }
-    .into())
+    serde_json::from_str(&content).map_err(|e| {
+        ListError::Storage {
+            message: format!("failed to parse {}: {e}", path.display()),
+        }
+        .into()
+    })
 }
 
 fn write_json_atomic<T>(path: &Path, value: &T) -> Result<(), SwpError>
@@ -158,7 +160,10 @@ where
 {
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|e| ListError::Storage {
-            message: format!("failed to create parent directory {}: {e}", parent.display()),
+            message: format!(
+                "failed to create parent directory {}: {e}",
+                parent.display()
+            ),
         })?;
     }
 
@@ -173,9 +178,10 @@ where
     let mut file = fs::File::create(&tmp_path).map_err(|e| ListError::Storage {
         message: format!("failed to create temp file {}: {e}", tmp_path.display()),
     })?;
-    file.write_all(&serialized).map_err(|e| ListError::Storage {
-        message: format!("failed writing temp file {}: {e}", tmp_path.display()),
-    })?;
+    file.write_all(&serialized)
+        .map_err(|e| ListError::Storage {
+            message: format!("failed writing temp file {}: {e}", tmp_path.display()),
+        })?;
     file.sync_all().map_err(|e| ListError::Storage {
         message: format!("failed syncing temp file {}: {e}", tmp_path.display()),
     })?;
@@ -205,15 +211,20 @@ fn save_index(index: &WallpaperIndexFile) -> Result<(), SwpError> {
     write_json_atomic(&path, index)
 }
 
-fn get_or_create_uuid_with_index(abs_path: &Path, index: &mut WallpaperIndexFile) -> Result<Uuid, SwpError> {
+fn get_or_create_uuid_with_index(
+    abs_path: &Path,
+    index: &mut WallpaperIndexFile,
+) -> Result<Uuid, SwpError> {
     let relative = to_relative_wallpaper_path(abs_path)?;
     let relative_key = normalize_relative_path(&relative);
 
     if let Some(id_str) = index.by_path.get(&relative_key) {
-        return Uuid::parse_str(id_str).map_err(|e| ListError::Index {
-            message: format!("invalid UUID in index for path '{relative_key}': {e}"),
-        }
-        .into());
+        return Uuid::parse_str(id_str).map_err(|e| {
+            ListError::Index {
+                message: format!("invalid UUID in index for path '{relative_key}': {e}"),
+            }
+            .into()
+        });
     }
 
     let id = Uuid::new_v4();
@@ -262,9 +273,10 @@ fn load_list(name: &str) -> Result<WallpaperList, SwpError> {
         message: format!("failed to read {}: {e}", path.display()),
     })?;
 
-    let parsed: WallpaperListFile = serde_json::from_str(&content).map_err(|e| ListError::Storage {
-        message: format!("failed to parse {}: {e}", path.display()),
-    })?;
+    let parsed: WallpaperListFile =
+        serde_json::from_str(&content).map_err(|e| ListError::Storage {
+            message: format!("failed to parse {}: {e}", path.display()),
+        })?;
 
     Ok(WallpaperList {
         name: parsed.name,
@@ -487,7 +499,10 @@ impl ListPlayer {
                 self.cycle_queue = fisher_yates_shuffle(&self.all_ids);
             }
 
-            let id = self.cycle_queue.pop().expect("cycle_queue should not be empty");
+            let id = self
+                .cycle_queue
+                .pop()
+                .expect("cycle_queue should not be empty");
 
             match resolve_uuid_to_path_with_index(&id, &index)? {
                 Some(path) if path.exists() => return Ok(path),

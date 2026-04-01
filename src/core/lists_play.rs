@@ -35,9 +35,11 @@ pub fn parse_interval(interval: &str) -> Result<Duration, SwpError> {
     }
 
     let num_part = &interval[..interval.len() - 1];
-    let n = num_part.parse::<u64>().map_err(|_| IntervalError::InvalidNumber {
-        input: interval.to_string(),
-    })?;
+    let n = num_part
+        .parse::<u64>()
+        .map_err(|_| IntervalError::InvalidNumber {
+            input: interval.to_string(),
+        })?;
 
     if n == 0 {
         return Err(IntervalError::ZeroInterval.into());
@@ -58,10 +60,7 @@ pub fn run(interval: &str, mut source: PlaybackSource) -> Result<(), SwpError> {
         match source.apply_next() {
             Ok(applied) => println!(
                 "  {}",
-                applied
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("?")
+                applied.file_name().and_then(|n| n.to_str()).unwrap_or("?")
             ),
             Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
         }
@@ -78,17 +77,26 @@ mod tests {
 
     #[test]
     fn parse_valid_second_interval() {
-        assert_eq!(parse_interval("30s").expect("valid seconds"), Duration::from_secs(30));
+        assert_eq!(
+            parse_interval("30s").expect("valid seconds"),
+            Duration::from_secs(30)
+        );
     }
 
     #[test]
     fn parse_valid_minute_interval() {
-        assert_eq!(parse_interval("10m").expect("valid minutes"), Duration::from_secs(600));
+        assert_eq!(
+            parse_interval("10m").expect("valid minutes"),
+            Duration::from_secs(600)
+        );
     }
 
     #[test]
     fn parse_valid_hour_interval() {
-        assert_eq!(parse_interval("2h").expect("valid hours"), Duration::from_secs(7200));
+        assert_eq!(
+            parse_interval("2h").expect("valid hours"),
+            Duration::from_secs(7200)
+        );
     }
 
     #[test]
