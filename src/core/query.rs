@@ -27,7 +27,9 @@ pub fn resolve_set_input_in_dir(dir: &Path, input: &str) -> Result<SetInputResol
             query: input.to_string(),
         }
         .into()),
-        1 => Ok(SetInputResolution::Resolved(matches.remove(0))),
+        1 => Ok(SetInputResolution::Resolved(
+            matches.pop().expect("single match should exist"),
+        )),
         _ => {
             matches.sort();
             Ok(SetInputResolution::MultipleMatches {

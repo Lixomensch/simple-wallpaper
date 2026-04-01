@@ -37,13 +37,14 @@ pub fn generate_or_get_thumbnail(
         .to_rgb8();
 
     let (width, height) = resized.dimensions();
-    
     let pixels = resized.to_vec();
 
-    let path_clone = cache_path.clone();
-    std::thread::spawn(move || {
-        let _ = resized.save(&path_clone);
-    });
+    resized.save(&cache_path).map_err(|e| SwpError::Thumbnail {
+        message: format!(
+            "Failed to save thumbnail {}: {e}",
+            cache_path.display()
+        ),
+    })?;
 
     Ok(ThumbnailData {
         width,

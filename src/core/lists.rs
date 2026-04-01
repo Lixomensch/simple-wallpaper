@@ -224,10 +224,11 @@ fn get_or_create_uuid_with_index(abs_path: &Path, index: &mut WallpaperIndexFile
     Ok(id)
 }
 
-fn resolve_uuid_to_path(id: &Uuid) -> Result<Option<PathBuf>, SwpError> {
-    let index = load_index()?;
+fn resolve_uuid_to_path_with_index(
+    id: &Uuid,
+    index: &WallpaperIndexFile,
+) -> Result<Option<PathBuf>, SwpError> {
     let id_key = id.to_string();
-
     let Some(relative_str) = index.by_id.get(&id_key) else {
         return Ok(None);
     };
@@ -236,8 +237,10 @@ fn resolve_uuid_to_path(id: &Uuid) -> Result<Option<PathBuf>, SwpError> {
     Ok(Some(abs))
 }
 
-fn resolve_uuid_to_relative_path(id: &Uuid) -> Result<Option<PathBuf>, SwpError> {
-    let index = load_index()?;
+fn resolve_uuid_to_relative_path_with_index(
+    id: &Uuid,
+    index: &WallpaperIndexFile,
+) -> Result<Option<PathBuf>, SwpError> {
     let id_key = id.to_string();
     let Some(relative_str) = index.by_id.get(&id_key) else {
         return Ok(None);
@@ -359,12 +362,17 @@ pub fn get_list(name: &str) -> Result<WallpaperList, SwpError> {
 
 pub fn get_list_items(name: &str) -> Result<Vec<ListItem>, SwpError> {
     let list = load_list(name)?;
+    get_list_items_from_list(&list)
+}
+
+pub fn get_list_items_from_list(list: &WallpaperList) -> Result<Vec<ListItem>, SwpError> {
+    let index = load_index()?;
     let mut items = Vec::with_capacity(list.wallpapers.len());
 
-    for id in list.wallpapers {
+    for &id in &list.wallpapers {
         items.push(ListItem {
             id,
-            relative_path: resolve_uuid_to_relative_path(&id)?,
+            relative_path: resolve_uuid_to_relative_path_with_index(&id, &index)?,
         });
     }
 
@@ -465,6 +473,8 @@ impl ListPlayer {
     }
 
     pub fn next_wallpaper(&mut self) -> Result<PathBuf, SwpError> {
+        let index = load_index()?;
+
         loop {
             if self.all_ids.is_empty() {
                 return Err(ListError::Empty {
@@ -479,7 +489,7 @@ impl ListPlayer {
 
             let id = self.cycle_queue.pop().expect("cycle_queue should not be empty");
 
-            match resolve_uuid_to_path(&id)? {
+            match resolve_uuid_to_path_with_index(&id, &index)? {
                 Some(path) if path.exists() => return Ok(path),
                 _ => {
                     self.all_ids.retain(|x| x != &id);

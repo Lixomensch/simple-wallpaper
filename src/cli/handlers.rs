@@ -9,6 +9,14 @@ use crate::core::wallpaper;
 use crate::cli::cmd::{interactive_pick, resolve_set_input};
 use crate::error::{ListError, SwpError};
 
+fn print_applied(prefix: &str, path: &std::path::Path) {
+    println!(
+        "{} {}",
+        prefix.green().bold(),
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("?")
+    );
+}
+
 pub fn handle_set(name: Vec<String>) -> Result<(), SwpError> {
     let query = name.join(" ");
 
@@ -19,30 +27,14 @@ pub fn handle_set(name: Vec<String>) -> Result<(), SwpError> {
     };
 
     let applied = operations::apply_wallpaper(&path)?;
-    
-    println!(
-        "{} {}",
-        "Wallpaper applied:".green().bold(),
-        applied
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("?")
-    );
+    print_applied("Wallpaper applied:", &applied);
 
     Ok(())
 }
 
 pub fn handle_random() -> Result<(), SwpError> {
     let img = operations::random_wallpaper()?;
-   
-    println!(
-        "{} {}",
-        "Random wallpaper:".green().bold(),
-        img
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("?")
-    );
+    print_applied("Random wallpaper:", &img);
 
     Ok(())
 }
@@ -127,7 +119,7 @@ pub fn handle_lists_delete(name: String) -> Result<(), SwpError> {
 
 pub fn handle_lists_show(name: String, plain: bool) -> Result<(), SwpError> {
     let list = lists::get_list(&name)?;
-    let items = lists::get_list_items(&name)?;
+    let items = lists::get_list_items_from_list(&list)?;
 
     if plain {
         for item in items {
@@ -208,29 +200,25 @@ pub fn handle_lists_remove(name: String, wallpapers: Vec<String>) -> Result<(), 
 }
 
 pub fn handle_lists_play(name: Option<String>, interval: String) -> Result<(), SwpError> {
-    match name {
-        Some(name) => {
-            let player = lists::ListPlayer::new(&name)?;
+    let source = if let Some(list_name) = name {
+        let player = lists::ListPlayer::new(&list_name)?;
+        println!(
+            "{} '{}' — interval {}  {}",
+            "List play started".cyan().bold(),
+            list_name.yellow().bold(),
+            interval.yellow().bold(),
+            "(Ctrl-C to stop)".dimmed()
+        );
+        lists_play::PlaybackSource::List(player)
+    } else {
+        println!(
+            "{} — interval {}  {}",
+            "Play started".cyan().bold(),
+            interval.yellow().bold(),
+            "(Ctrl-C to stop)".dimmed()
+        );
+        lists_play::PlaybackSource::Filesystem
+    };
 
-            println!(
-                "{} '{}' — interval {}  {}",
-                "List play started".cyan().bold(),
-                name.yellow().bold(),
-                interval.yellow().bold(),
-                "(Ctrl-C to stop)".dimmed()
-            );
-
-            lists_play::run(&interval, lists_play::PlaybackSource::List(player))
-        }
-        None => {
-            println!(
-                "{} — interval {}  {}",
-                "Play started".cyan().bold(),
-                interval.yellow().bold(),
-                "(Ctrl-C to stop)".dimmed()
-            );
-
-            lists_play::run(&interval, lists_play::PlaybackSource::Filesystem)
-        }
-    }
+    lists_play::run(&interval, source)
 }
