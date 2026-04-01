@@ -20,7 +20,7 @@ fn run() -> Result<(), SwpError> {
     match app.command {
         Commands::Set { name } => cli::handlers::handle_set(name),
         Commands::Random => cli::handlers::handle_random(),
-        Commands::List { plain } => cli::handlers::handle_list(plain),
+        Commands::Wallpapers { plain } => cli::handlers::handle_wallpapers(plain),
         Commands::Lists { command } => cli::handlers::handle_lists(command),
         Commands::Path => cli::handlers::handle_path(),
         Commands::Gui => gui::launch(),

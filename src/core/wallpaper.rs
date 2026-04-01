@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use rand::prelude::IndexedRandom;
+use rand::RngExt;
 use walkdir::WalkDir;
 
 use crate::error::SwpError;
@@ -38,18 +38,34 @@ pub fn list_images(dir: &Path) -> Vec<PathBuf> {
 }
 
 pub fn random_image(dir: &Path) -> Option<PathBuf> {
-    let images = list_images(dir);
     let mut rng = rand::rng();
-    images.choose(&mut rng).cloned()
+    let mut selected: Option<PathBuf> = None;
+    let mut count = 0u64;
+
+    WalkDir::new(dir)
+        .into_iter()
+        .filter_entry(|e| e.file_name() != "thumbnails")
+        .filter_map(Result::ok)
+        .filter(|e| is_image(e.path()))
+        .for_each(|entry| {
+            count += 1;
+            // Reservoir sampling: select with probability 1/count
+            if rng.random_range(0..count) == 0 {
+                selected = Some(entry.path().to_path_buf());
+            }
+        });
+
+    selected
 }
 
 fn matches_all_words(filename: &str, words: &[&str]) -> bool {
     let lower_filename = filename.to_lowercase();
-    words.iter().all(|w| lower_filename.contains(&w.to_lowercase()))
+    words.iter().all(|w| lower_filename.contains(w))
 }
 
 pub fn find_by_words(dir: &Path, query: &str) -> Vec<PathBuf> {
-    let words: Vec<&str> = query.split_whitespace().collect();
+    let lower_query = query.to_lowercase();
+    let words: Vec<&str> = lower_query.split_whitespace().collect();
 
     if words.is_empty() {
         return Vec::new();

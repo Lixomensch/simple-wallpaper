@@ -155,6 +155,9 @@ pub enum ListError {
     #[error("List '{name}' already exists.")]
     AlreadyExists { name: String },
 
+    #[error("Wallpaper '{wallpaper}' is already in list '{name}'.")]
+    AlreadyInList { name: String, wallpaper: String },
+
     #[error("List '{name}' not found. Use `swp lists` to see available lists.")]
     NotFound { name: String },
 

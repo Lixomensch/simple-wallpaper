@@ -7,7 +7,7 @@ use crate::core::lists_play;
 use crate::core::operations;
 use crate::core::wallpaper;
 use crate::cli::cmd::{interactive_pick, resolve_set_input};
-use crate::error::SwpError;
+use crate::error::{ListError, SwpError};
 
 pub fn handle_set(name: Vec<String>) -> Result<(), SwpError> {
     let query = name.join(" ");
@@ -47,7 +47,7 @@ pub fn handle_random() -> Result<(), SwpError> {
     Ok(())
 }
 
-pub fn handle_list(plain: bool) -> Result<(), SwpError> {
+pub fn handle_wallpapers(plain: bool) -> Result<(), SwpError> {
     let (dir, images) = operations::list_wallpapers()?;
 
     if plain {
@@ -132,8 +132,8 @@ pub fn handle_lists_show(name: String, plain: bool) -> Result<(), SwpError> {
     if plain {
         for item in items {
             match item.relative_path {
-                Some(relative) => println!("{}\t{}", item.id, relative.display()),
-                None => println!("{}\t<missing-index-entry>", item.id),
+                Some(relative) => println!("{}", relative.display()),
+                None => println!("<missing-index-entry>"),
             }
         }
     } else {
@@ -145,8 +145,8 @@ pub fn handle_lists_show(name: String, plain: bool) -> Result<(), SwpError> {
         );
         for item in items {
             match item.relative_path {
-                Some(relative) => println!("  {}  {}", item.id.to_string().dimmed(), relative.display()),
-                None => println!("  {}  {}", item.id.to_string().dimmed(), "<missing-index-entry>".yellow()),
+                Some(relative) => println!("  {}", relative.display()),
+                None => println!("  {}", "<missing-index-entry>".yellow()),
             }
         }
     }
@@ -155,11 +155,23 @@ pub fn handle_lists_show(name: String, plain: bool) -> Result<(), SwpError> {
 
 pub fn handle_lists_add(name: String, wallpapers: Vec<String>) -> Result<(), SwpError> {
     let mut paths = Vec::new();
-    for input in wallpapers {
-        paths.push(resolve_set_input(&input)?);
+
+    if wallpapers.is_empty() {
+        paths.push(interactive_pick()?);
+    } else {
+        for input in wallpapers {
+            paths.push(resolve_set_input(&input)?);
+        }
     }
 
-    let added = lists::add_wallpapers_by_paths(&name, &paths)?;
+    let added = match lists::add_wallpapers_by_paths(&name, &paths) {
+        Ok(added) => added,
+        Err(SwpError::List(ListError::AlreadyInList { .. })) => {
+            println!("{}", "The wallpaper is already on the list.".yellow().bold());
+            return Ok(());
+        }
+        Err(err) => return Err(err),
+    };
     println!(
         "{} {} {}",
         "Added".green().bold(),
@@ -173,12 +185,16 @@ pub fn handle_lists_remove(name: String, wallpapers: Vec<String>) -> Result<(), 
     let mut ids = Vec::new();
     let mut paths = Vec::new();
 
-    for input in wallpapers {
-        if let Ok(id) = Uuid::parse_str(&input) {
-            ids.push(id);
-            continue;
+    if wallpapers.is_empty() {
+        ids.push(crate::cli::cmd::pick_from_list(&name)?);
+    } else {
+        for input in wallpapers {
+            if let Ok(id) = Uuid::parse_str(&input) {
+                ids.push(id);
+                continue;
+            }
+            paths.push(resolve_set_input(&input)?);
         }
-        paths.push(resolve_set_input(&input)?);
     }
 
     let removed = lists::remove_wallpapers(&name, &paths, &ids)?;

@@ -205,27 +205,9 @@ fn save_index(index: &WallpaperIndexFile) -> Result<(), SwpError> {
     write_json_atomic(&path, index)
 }
 
-fn find_uuid_by_abs_path(abs_path: &Path) -> Result<Option<Uuid>, SwpError> {
-    let relative = to_relative_wallpaper_path(abs_path)?;
-    let key = normalize_relative_path(&relative);
-    let index = load_index()?;
-
-    if let Some(id_str) = index.by_path.get(&key) {
-        return Uuid::parse_str(id_str)
-            .map(Some)
-            .map_err(|e| ListError::Index {
-                message: format!("invalid UUID in index for path '{key}': {e}"),
-            }
-            .into());
-    }
-
-    Ok(None)
-}
-
-fn get_or_create_uuid(abs_path: &Path) -> Result<Uuid, SwpError> {
+fn get_or_create_uuid_with_index(abs_path: &Path, index: &mut WallpaperIndexFile) -> Result<Uuid, SwpError> {
     let relative = to_relative_wallpaper_path(abs_path)?;
     let relative_key = normalize_relative_path(&relative);
-    let mut index = load_index()?;
 
     if let Some(id_str) = index.by_path.get(&relative_key) {
         return Uuid::parse_str(id_str).map_err(|e| ListError::Index {
@@ -239,7 +221,6 @@ fn get_or_create_uuid(abs_path: &Path) -> Result<Uuid, SwpError> {
     index.by_path.insert(relative_key.clone(), id_str.clone());
     index.by_id.insert(id_str, relative_key);
     index.version = INDEX_SCHEMA_VERSION;
-    save_index(&index)?;
     Ok(id)
 }
 
@@ -392,16 +373,25 @@ pub fn get_list_items(name: &str) -> Result<Vec<ListItem>, SwpError> {
 
 pub fn add_wallpapers_by_paths(name: &str, paths: &[PathBuf]) -> Result<usize, SwpError> {
     let mut list = load_list(name)?;
+    let mut index = load_index()?;
+    let existing: std::collections::HashSet<Uuid> = list.wallpapers.iter().copied().collect();
     let mut added = 0usize;
 
     for path in paths {
-        let id = get_or_create_uuid(path)?;
-        if !list.wallpapers.contains(&id) {
-            list.wallpapers.push(id);
-            added += 1;
+        let id = get_or_create_uuid_with_index(path, &mut index)?;
+        if existing.contains(&id) {
+            return Err(ListError::AlreadyInList {
+                name: name.to_string(),
+                wallpaper: path.display().to_string(),
+            }
+            .into());
         }
+
+        list.wallpapers.push(id);
+        added += 1;
     }
 
+    save_index(&index)?;
     list.updated_at = now_unix_secs();
     save_list(&list)?;
     Ok(added)
@@ -410,16 +400,21 @@ pub fn add_wallpapers_by_paths(name: &str, paths: &[PathBuf]) -> Result<usize, S
 pub fn remove_wallpapers(name: &str, paths: &[PathBuf], ids: &[Uuid]) -> Result<usize, SwpError> {
     let mut list = load_list(name)?;
     let original_len = list.wallpapers.len();
+    let index = load_index()?;
 
-    for id in ids {
-        list.wallpapers.retain(|item| item != id);
-    }
+    let mut to_remove: std::collections::HashSet<Uuid> = ids.iter().copied().collect();
 
     for path in paths {
-        if let Some(id) = find_uuid_by_abs_path(path)? {
-            list.wallpapers.retain(|item| item != &id);
+        let relative = to_relative_wallpaper_path(path)?;
+        let key = normalize_relative_path(&relative);
+        if let Some(id_str) = index.by_path.get(&key) {
+            if let Ok(id) = Uuid::parse_str(id_str) {
+                to_remove.insert(id);
+            }
         }
     }
+
+    list.wallpapers.retain(|item| !to_remove.contains(item));
 
     let removed = original_len.saturating_sub(list.wallpapers.len());
     list.updated_at = now_unix_secs();

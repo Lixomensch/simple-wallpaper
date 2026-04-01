@@ -24,7 +24,7 @@ pub enum Commands {
         name: Vec<String>,
     },
     Random,
-    List {
+    Wallpapers {
         #[arg(long)]
         plain: bool,
     },
@@ -51,17 +51,17 @@ pub enum ListsCommands {
     },
     Add {
         name: String,
-        #[arg(required = true, num_args = 1.., value_name = "WALLPAPER")]
+        #[arg(num_args = 0.., value_name = "WALLPAPER")]
         wallpapers: Vec<String>,
     },
     Remove {
         name: String,
-        #[arg(required = true, num_args = 1.., value_name = "WALLPAPER_OR_UUID")]
+        #[arg(num_args = 0.., value_name = "WALLPAPER_OR_UUID")]
         wallpapers: Vec<String>,
     },
     Play {
         name: Option<String>,
-        #[arg(long, default_value = "15m")]
+        #[arg(short = 'i', long, default_value = "15m")]
         interval: String,
     },
 }

@@ -1,7 +1,9 @@
 use std::path::PathBuf;
 
+use uuid::Uuid;
 use crate::core::query::{self, SetInputResolution};
 use crate::core::wallpaper::{list_images, wallpaper_dir};
+use crate::core::lists;
 use crate::error::{QueryError, SelectionError, SwpError};
 
 pub fn pick_from_entries(entries: Vec<(String, PathBuf)>, prompt: &str) -> Result<PathBuf, SwpError> {
@@ -69,4 +71,63 @@ pub fn resolve_set_input(input: &str) -> Result<PathBuf, SwpError> {
             pick_from_matches(matches, &query)
         }
     }
+}
+
+pub fn pick_from_list(list_name: &str) -> Result<Uuid, SwpError> {
+    let items = lists::get_list_items(list_name)?;
+
+    if items.is_empty() {
+        return Err(SelectionError::PromptFailure {
+            message: "No wallpapers in list.".to_string(),
+        }
+        .into());
+    }
+
+    let names: Vec<String> = items
+        .iter()
+        .filter_map(|item| {
+            item.relative_path
+                .as_ref()
+                .and_then(|p| p.file_name()?.to_str())
+                .map(|s| s.to_owned())
+        })
+        .collect();
+
+    if names.is_empty() {
+        return Err(SelectionError::PromptFailure {
+            message: "No valid wallpapers in list.".to_string(),
+        }
+        .into());
+    }
+
+    let count = names.len();
+    let selected = inquire::Select::new("Choose a wallpaper to remove:", names)
+        .with_page_size(14.min(count))
+        .with_help_message(
+            "↑↓ to navigate  •  Type to filter  •  Enter to confirm  •  Esc to cancel",
+        )
+        .prompt()
+        .map_err(|e| match e {
+            inquire::InquireError::OperationCanceled
+            | inquire::InquireError::OperationInterrupted => SelectionError::Canceled,
+            other => SelectionError::PromptFailure {
+                message: other.to_string(),
+            },
+        })?;
+
+    items
+        .into_iter()
+        .find_map(|item| {
+            item.relative_path
+                .as_ref()
+                .and_then(|p| p.file_name()?.to_str())
+                .and_then(|name| {
+                    if name == selected {
+                        Some(item.id)
+                    } else {
+                        None
+                    }
+                })
+        })
+        .ok_or(SelectionError::InvalidSelection.into())
 }

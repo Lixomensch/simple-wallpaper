@@ -67,10 +67,10 @@ swp lists play --interval 1h
 
 Press **Ctrl-C** to stop.
 
-### list — show all available wallpapers
+### wallpapers — show all available wallpapers
 
 ```bash
-swp list
+swp wallpapers
 ```
 
 ### path — print the wallpaper directory
