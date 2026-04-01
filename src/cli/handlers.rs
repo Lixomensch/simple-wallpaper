@@ -1,12 +1,11 @@
-use std::thread;
 use colored::Colorize;
 use uuid::Uuid;
 
 use crate::cli::ListsCommands;
-use crate::core::wallpaper;
-use crate::core::operations;
 use crate::core::lists;
-use crate::core::slideshow;
+use crate::core::lists_play;
+use crate::core::operations;
+use crate::core::wallpaper;
 use crate::cli::cmd::{interactive_pick, resolve_set_input};
 use crate::error::SwpError;
 
@@ -46,31 +45,6 @@ pub fn handle_random() -> Result<(), SwpError> {
     );
 
     Ok(())
-}
-
-pub fn handle_play(interval: String) -> Result<(), SwpError> {
-    let duration = slideshow::parse_interval(&interval)?;
-    
-    println!(
-        "{} — interval {}  {}",
-        "Play started".cyan().bold(),
-        interval.yellow().bold(),
-        "(Ctrl-C to stop)".dimmed()
-    );
-
-    loop {
-        match operations::random_wallpaper() {
-            Ok(applied) => println!(
-                "  {}",
-                applied
-                    .file_name()
-                    .and_then(|n| n.to_str())
-                    .unwrap_or("?")
-            ),
-            Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
-        }
-        thread::sleep(duration);
-    }
 }
 
 pub fn handle_list(plain: bool) -> Result<(), SwpError> {
@@ -217,32 +191,30 @@ pub fn handle_lists_remove(name: String, wallpapers: Vec<String>) -> Result<(), 
     Ok(())
 }
 
-pub fn handle_lists_play(name: String, interval: String) -> Result<(), SwpError> {
-    let duration = slideshow::parse_interval(&interval)?;
-    let mut player = lists::ListPlayer::new(&name)?;
+pub fn handle_lists_play(name: Option<String>, interval: String) -> Result<(), SwpError> {
+    match name {
+        Some(name) => {
+            let player = lists::ListPlayer::new(&name)?;
 
-    println!(
-        "{} '{}' — interval {}  {}",
-        "List play started".cyan().bold(),
-        name.yellow().bold(),
-        interval.yellow().bold(),
-        "(Ctrl-C to stop)".dimmed()
-    );
+            println!(
+                "{} '{}' — interval {}  {}",
+                "List play started".cyan().bold(),
+                name.yellow().bold(),
+                interval.yellow().bold(),
+                "(Ctrl-C to stop)".dimmed()
+            );
 
-    loop {
-        match player.next_wallpaper() {
-            Ok(path) => match operations::apply_wallpaper(&path) {
-                Ok(applied) => println!(
-                    "  {}",
-                    applied
-                        .file_name()
-                        .and_then(|n| n.to_str())
-                        .unwrap_or("?")
-                ),
-                Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
-            },
-            Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
+            lists_play::run(&interval, lists_play::PlaybackSource::List(player))
         }
-        thread::sleep(duration);
+        None => {
+            println!(
+                "{} — interval {}  {}",
+                "Play started".cyan().bold(),
+                interval.yellow().bold(),
+                "(Ctrl-C to stop)".dimmed()
+            );
+
+            lists_play::run(&interval, lists_play::PlaybackSource::Filesystem)
+        }
     }
 }

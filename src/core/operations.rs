@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 
-use crate::backends;
+use crate::core::backends;
 use crate::core::wallpaper;
 use crate::error::{QueryError, SwpError};
 

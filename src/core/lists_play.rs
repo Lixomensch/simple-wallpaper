@@ -1,6 +1,28 @@
+use std::path::PathBuf;
+use std::thread;
 use std::time::Duration;
 
+use colored::Colorize;
+
+use crate::core::{lists, operations};
 use crate::error::{IntervalError, SwpError};
+
+pub enum PlaybackSource {
+    List(lists::ListPlayer),
+    Filesystem,
+}
+
+impl PlaybackSource {
+    fn apply_next(&mut self) -> Result<PathBuf, SwpError> {
+        match self {
+            Self::List(player) => {
+                let path = player.next_wallpaper()?;
+                operations::apply_wallpaper(&path)
+            }
+            Self::Filesystem => operations::random_wallpaper(),
+        }
+    }
+}
 
 pub fn parse_interval(interval: &str) -> Result<Duration, SwpError> {
     let last = interval.chars().last().unwrap_or('\0');
@@ -26,6 +48,24 @@ pub fn parse_interval(interval: &str) -> Result<Duration, SwpError> {
         'm' => Ok(Duration::from_secs(n * 60)),
         'h' => Ok(Duration::from_secs(n * 3600)),
         _ => unreachable!(),
+    }
+}
+
+pub fn run(interval: &str, mut source: PlaybackSource) -> Result<(), SwpError> {
+    let duration = parse_interval(interval)?;
+
+    loop {
+        match source.apply_next() {
+            Ok(applied) => println!(
+                "  {}",
+                applied
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .unwrap_or("?")
+            ),
+            Err(e) => eprintln!("  {} {}", "Error:".yellow().bold(), e),
+        }
+        thread::sleep(duration);
     }
 }
 

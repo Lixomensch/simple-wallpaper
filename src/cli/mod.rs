@@ -24,10 +24,6 @@ pub enum Commands {
         name: Vec<String>,
     },
     Random,
-    Play {
-        #[arg(default_value = "15m")]
-        interval: String,
-    },
     List {
         #[arg(long)]
         plain: bool,
@@ -64,7 +60,7 @@ pub enum ListsCommands {
         wallpapers: Vec<String>,
     },
     Play {
-        name: String,
+        name: Option<String>,
         #[arg(long, default_value = "15m")]
         interval: String,
     },

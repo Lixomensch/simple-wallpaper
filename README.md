@@ -56,13 +56,13 @@ swp set /home/user/bg.png     # apply any image by absolute path
 swp random
 ```
 
-### play — rotate wallpapers at a fixed interval
+### lists play — rotate wallpapers at a fixed interval
 
 ```bash
-swp play                  # default interval: 15 minutes
-swp play --interval 30s
-swp play --interval 5m
-swp play --interval 1h
+swp lists play my-favorites          # play from a specific list
+swp lists play my-favorites --interval 30s
+swp lists play --interval 5m         # no list: direct filesystem mode
+swp lists play --interval 1h
 ```
 
 Press **Ctrl-C** to stop.

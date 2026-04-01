@@ -1,7 +1,7 @@
 //! Desktop environment backends for applying wallpapers.
 //!
 //! Detects the current DE/WM at runtime and delegates to the appropriate
-//! setter tool.  Supported environments (Arch Linux focus):
+//! setter tool. Supported environments (Arch Linux focus):
 //!
 //! | Environment          | Tool                         |
 //! |----------------------|------------------------------|
