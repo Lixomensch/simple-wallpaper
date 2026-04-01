@@ -24,7 +24,3 @@ pub fn list_wallpapers() -> Result<(PathBuf, Vec<PathBuf>), SwpError> {
     images.sort();
     Ok((dir, images))
 }
-
-pub fn wallpaper_directory() -> Result<PathBuf, SwpError> {
-    wallpaper::wallpaper_dir()
-}

@@ -26,6 +26,9 @@ pub enum SwpError {
     #[error(transparent)]
     Selection(#[from] SelectionError),
 
+    #[error(transparent)]
+    List(#[from] ListError),
+
     #[error("Failed to launch GUI: {message}")]
     GuiLaunch { message: String },
 
@@ -44,6 +47,7 @@ impl Clone for SwpError {
             Self::Backend(err) => Self::Backend(err.clone()),
             Self::Interval(err) => Self::Interval(err.clone()),
             Self::Selection(err) => Self::Selection(err.clone()),
+            Self::List(err) => Self::List(err.clone()),
             Self::GuiLaunch { message } => Self::GuiLaunch {
                 message: message.clone(),
             },
@@ -141,4 +145,31 @@ pub enum SelectionError {
 
     #[error("{message}")]
     PromptFailure { message: String },
+}
+
+#[derive(Debug, Error, Clone)]
+pub enum ListError {
+    #[error("Invalid list name '{name}'. Use letters, numbers, '-' and '_'.")]
+    InvalidName { name: String },
+
+    #[error("List '{name}' already exists.")]
+    AlreadyExists { name: String },
+
+    #[error("List '{name}' not found. Use `swp lists` to see available lists.")]
+    NotFound { name: String },
+
+    #[error("List '{name}' is empty.")]
+    Empty { name: String },
+
+    #[error("Wallpaper path must be inside {base}: {path}")]
+    WallpaperOutsideBase { path: PathBuf, base: PathBuf },
+
+    #[error("Wallpaper input not found: '{input}'")]
+    InvalidWallpaperInput { input: String },
+
+    #[error("Storage error: {message}")]
+    Storage { message: String },
+
+    #[error("Index error: {message}")]
+    Index { message: String },
 }

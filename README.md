@@ -29,7 +29,7 @@ The binary is installed as `swp`.
 Managed wallpapers live in:
 
 ```
-~/.local/share/simple-wallpaper/wallpapers/
+~/.local/share/swp/wallpapers/
 ```
 
 Copy or symlink your images there. Subdirectories are supported.
@@ -56,13 +56,13 @@ swp set /home/user/bg.png     # apply any image by absolute path
 swp random
 ```
 
-### slideshow — rotate wallpapers at a fixed interval
+### play — rotate wallpapers at a fixed interval
 
 ```bash
-swp slideshow                  # default interval: 15 minutes
-swp slideshow --interval 30s
-swp slideshow --interval 5m
-swp slideshow --interval 1h
+swp play                  # default interval: 15 minutes
+swp play --interval 30s
+swp play --interval 5m
+swp play --interval 1h
 ```
 
 Press **Ctrl-C** to stop.
@@ -77,7 +77,7 @@ swp list
 
 ```bash
 swp path
-# → /home/user/.local/share/simple-wallpaper/wallpapers
+# → /home/user/.local/share/swp/wallpapers
 ```
 
 ## Notes for specific desktops

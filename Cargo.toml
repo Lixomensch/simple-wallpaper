@@ -14,5 +14,8 @@ inquire  = "0.9.4"
 iced     = { version = "0.13.1", features = ["image"] }
 image    = "0.25.8"
 rand     = "0.10.0"
+serde    = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
 thiserror = "2.0.12"
+uuid = { version = "1.18.1", features = ["v4", "serde"] }
 walkdir  = "2.5.0"

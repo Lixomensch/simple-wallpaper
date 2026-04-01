@@ -17,7 +17,7 @@ pub fn init() -> Result<(), SwpError> {
 
 pub fn wallpaper_dir() -> Result<PathBuf, SwpError> {
     let home = std::env::var("HOME").map_err(|_| SwpError::HomeEnvMissing)?;
-    Ok(PathBuf::from(home).join(".local/share/simple-wallpaper/wallpapers"))
+    Ok(PathBuf::from(home).join(".local/share/swp/wallpapers"))
 }
 
 pub fn is_image(path: &Path) -> bool {
