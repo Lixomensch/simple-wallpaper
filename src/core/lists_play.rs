@@ -68,6 +68,10 @@ pub fn run(interval: &str, mut source: PlaybackSource) -> Result<(), SwpError> {
     }
 }
 
+pub fn run_foreground(interval: &str, source: PlaybackSource) -> Result<(), SwpError> {
+    run(interval, source)
+}
+
 #[cfg(test)]
 mod tests {
     use std::time::Duration;

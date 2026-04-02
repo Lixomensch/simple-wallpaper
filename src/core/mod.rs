@@ -5,6 +5,8 @@ pub mod error;
 pub mod lists;
 pub mod lists_play;
 pub mod operations;
+pub mod playback_manager;
+pub mod playback_state;
 pub mod query;
 pub mod thumbnail;
 pub mod wallpaper;

@@ -6,6 +6,7 @@ use crate::cli::cmd::{interactive_pick, resolve_set_input};
 use crate::core::lists;
 use crate::core::lists_play;
 use crate::core::operations;
+use crate::core::playback_manager;
 use crate::core::wallpaper;
 use crate::error::{ListError, SwpError};
 
@@ -81,7 +82,13 @@ pub fn handle_lists(command: Option<ListsCommands>) -> Result<(), SwpError> {
         Some(ListsCommands::Show { name, plain }) => handle_lists_show(name, plain),
         Some(ListsCommands::Add { name, wallpapers }) => handle_lists_add(name, wallpapers),
         Some(ListsCommands::Remove { name, wallpapers }) => handle_lists_remove(name, wallpapers),
-        Some(ListsCommands::Play { name, interval }) => handle_lists_play(name, interval),
+        Some(ListsCommands::Play {
+            name,
+            interval,
+            foreground,
+            resume,
+        }) => handle_lists_play(name, interval, foreground, resume),
+        Some(ListsCommands::Stop) => handle_lists_stop(),
     }
 }
 
@@ -197,26 +204,41 @@ pub fn handle_lists_remove(name: String, wallpapers: Vec<String>) -> Result<(), 
     Ok(())
 }
 
-pub fn handle_lists_play(name: Option<String>, interval: String) -> Result<(), SwpError> {
-    let source = if let Some(list_name) = name {
-        let player = lists::ListPlayer::new(&list_name)?;
-        println!(
-            "{} '{}' — interval {}  {}",
-            "List play started".cyan().bold(),
-            list_name.yellow().bold(),
-            interval.yellow().bold(),
-            "(Ctrl-C to stop)".dimmed()
-        );
-        lists_play::PlaybackSource::List(player)
-    } else {
-        println!(
-            "{} — interval {}  {}",
-            "Play started".cyan().bold(),
-            interval.yellow().bold(),
-            "(Ctrl-C to stop)".dimmed()
-        );
-        lists_play::PlaybackSource::Filesystem
-    };
+pub fn handle_lists_play(
+    name: Option<String>,
+    interval: String,
+    foreground: bool,
+    resume: bool,
+) -> Result<(), SwpError> {
+    if resume {
+        return playback_manager::resume_playback();
+    }
 
-    lists_play::run(&interval, source)
+    if foreground {
+        let source = if let Some(list_name) = name {
+            let player = lists::ListPlayer::new(&list_name)?;
+            lists_play::PlaybackSource::List(player)
+        } else {
+            lists_play::PlaybackSource::Filesystem
+        };
+
+        return lists_play::run_foreground(&interval, source);
+    }
+
+    let pid = playback_manager::start_playback(name.clone(), &interval)?;
+    println!(
+        "{} pid={} interval={} {}",
+        "Playback started".cyan().bold(),
+        pid.to_string().yellow().bold(),
+        interval.yellow().bold(),
+        "(runs in background)".dimmed()
+    );
+
+    Ok(())
+}
+
+pub fn handle_lists_stop() -> Result<(), SwpError> {
+    playback_manager::stop_playback()?;
+    println!("{}", "Playback stopped.".green().bold());
+    Ok(())
 }

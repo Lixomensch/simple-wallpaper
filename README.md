@@ -105,7 +105,7 @@ swp lists remove my-favorites floresta.jpg
 
 Removes wallpapers from a list by name or UUID.
 
-#### lists play — rotate wallpapers at a fixed interval
+#### lists play — start wallpaper rotation in the background
 
 ```bash
 swp lists play my-favorites          # play from a specific list
@@ -114,7 +114,16 @@ swp lists play --interval 5m         # no list: direct filesystem mode
 swp lists play --interval 1h
 ```
 
-Press **Ctrl-C** to stop.
+The command returns immediately and keeps running in the background.
+Playback state is saved to `~/.config/swp/playback.json`.
+
+#### lists stop
+
+```bash
+swp lists stop
+```
+
+Stops the active playback process and clears the persisted state.
 
 ### wallpapers — show all available wallpapers
 
@@ -128,6 +137,28 @@ swp wallpapers
 swp path
 # → /home/user/.local/share/swp/wallpapers
 ```
+
+## Auto-start on login
+
+Playback can be resumed automatically in a desktop session with a systemd user
+service. The service should call the hidden internal resume path and rely on
+`~/.config/swp/playback.json` as the source of truth.
+
+An example unit is provided at [systemd/swp-resume.service](systemd/swp-resume.service).
+It is intentionally `oneshot` and should be enabled under
+`graphical-session.target`.
+
+Recommended setup:
+
+```bash
+mkdir -p ~/.config/systemd/user
+cp systemd/swp-resume.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now swp-resume.service
+```
+
+When playback is not active, or the persisted state is missing/corrupt, the
+resume path exits without blocking the session.
 
 ## Notes for specific desktops
 

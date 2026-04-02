@@ -29,6 +29,9 @@ pub enum SwpError {
     #[error(transparent)]
     List(#[from] ListError),
 
+    #[error(transparent)]
+    Playback(#[from] PlaybackError),
+
     #[error("Thumbnail error: {message}")]
     Thumbnail { message: String },
 }
@@ -45,6 +48,7 @@ impl Clone for SwpError {
             Self::Interval(err) => Self::Interval(err.clone()),
             Self::Selection(err) => Self::Selection(err.clone()),
             Self::List(err) => Self::List(err.clone()),
+            Self::Playback(err) => Self::Playback(err.clone()),
             Self::Thumbnail { message } => Self::Thumbnail {
                 message: message.clone(),
             },
@@ -166,4 +170,37 @@ pub enum ListError {
 
     #[error("Index error: {message}")]
     Index { message: String },
+}
+
+#[derive(Debug, Error)]
+pub enum PlaybackError {
+    #[error("No active playback found.")]
+    NoActivePlayback,
+
+    #[error("Invalid playback state: {message}")]
+    InvalidState { message: String },
+
+    #[error("Failed to spawn playback process: {message}")]
+    SpawnError { message: String },
+
+    #[error("Failed to stop playback process {pid}: {message}")]
+    KillError { pid: u32, message: String },
+}
+
+impl Clone for PlaybackError {
+    fn clone(&self) -> Self {
+        match self {
+            Self::NoActivePlayback => Self::NoActivePlayback,
+            Self::InvalidState { message } => Self::InvalidState {
+                message: message.clone(),
+            },
+            Self::SpawnError { message } => Self::SpawnError {
+                message: message.clone(),
+            },
+            Self::KillError { pid, message } => Self::KillError {
+                pid: *pid,
+                message: message.clone(),
+            },
+        }
+    }
 }

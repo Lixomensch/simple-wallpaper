@@ -66,5 +66,10 @@ pub enum ListsCommands {
         name: Option<String>,
         #[arg(short = 'i', long, default_value = "15m")]
         interval: String,
+        #[arg(long, hide = true, default_value_t = false)]
+        foreground: bool,
+        #[arg(long, hide = true, default_value_t = false)]
+        resume: bool,
     },
+    Stop,
 }
