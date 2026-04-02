@@ -1,3 +1,7 @@
+pub use crate as cli;
+pub use simple_wallpaper_core as core;
+pub use simple_wallpaper_core::error;
+
 pub mod cmd;
 pub mod handlers;
 

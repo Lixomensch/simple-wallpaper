@@ -3814,9 +3814,28 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "colored",
- "iced",
- "image 0.25.10",
+ "simple-wallpaper-cli",
+ "simple-wallpaper-core",
+ "simple-wallpaper-gui",
+]
+
+[[package]]
+name = "simple-wallpaper-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "colored",
  "inquire",
+ "simple-wallpaper-core",
+ "uuid",
+]
+
+[[package]]
+name = "simple-wallpaper-core"
+version = "0.1.0"
+dependencies = [
+ "colored",
+ "image 0.25.10",
  "rand 0.10.0",
  "serde",
  "serde_json",
@@ -3824,6 +3843,16 @@ dependencies = [
  "tokio",
  "uuid",
  "walkdir",
+]
+
+[[package]]
+name = "simple-wallpaper-gui"
+version = "0.1.0"
+dependencies = [
+ "iced",
+ "simple-wallpaper-core",
+ "tokio",
+ "uuid",
 ]
 
 [[package]]

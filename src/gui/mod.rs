@@ -1,3 +1,7 @@
+pub use crate as gui;
+pub use simple_wallpaper_core as core;
+pub use simple_wallpaper_core::error;
+
 pub mod handlers;
 pub mod message;
 pub mod runtime;

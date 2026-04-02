@@ -1,8 +1,8 @@
 use clap::Parser;
 use colored::Colorize;
-use simple_wallpaper::cli::{Cli, Commands};
-use simple_wallpaper::error::SwpError;
-use simple_wallpaper::{cli, core, gui};
+use simple_wallpaper_cli::{self as cli, Cli, Commands};
+use simple_wallpaper_core::{self as core, SwpError};
+use simple_wallpaper_gui as gui;
 
 fn main() {
     if let Err(e) = run() {
