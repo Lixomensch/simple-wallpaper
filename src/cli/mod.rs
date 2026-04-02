@@ -23,6 +23,10 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    Add {
+        #[arg(required = true, num_args = 1.., value_name = "FILE")]
+        files: Vec<String>,
+    },
     Set {
         #[arg(num_args = 0.., value_name = "NAME")]
         name: Vec<String>,
@@ -49,7 +53,7 @@ pub enum ListsCommands {
     },
     Show {
         name: String,
-        #[arg(long)]
+        #[arg(short = 'p', long)]
         plain: bool,
     },
     Add {

@@ -14,6 +14,23 @@ pub enum SwpError {
         source: io::Error,
     },
 
+    #[error("Wallpaper source not found: {path}")]
+    WallpaperSourceNotFound { path: PathBuf },
+
+    #[error("Wallpaper source is not a file: {path}")]
+    WallpaperSourceNotFile { path: PathBuf },
+
+    #[error("Unsupported wallpaper format: {path}")]
+    UnsupportedWallpaperFormat { path: PathBuf },
+
+    #[error("Failed to copy wallpaper from {from} to {to}: {source}")]
+    CopyWallpaper {
+        from: PathBuf,
+        to: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
     #[error(transparent)]
     Query(#[from] QueryError),
 
@@ -41,6 +58,20 @@ impl Clone for SwpError {
         match self {
             Self::HomeEnvMissing => Self::HomeEnvMissing,
             Self::CreateWallpapersDir { source } => Self::CreateWallpapersDir {
+                source: io::Error::new(source.kind(), source.to_string()),
+            },
+            Self::WallpaperSourceNotFound { path } => Self::WallpaperSourceNotFound {
+                path: path.clone(),
+            },
+            Self::WallpaperSourceNotFile { path } => Self::WallpaperSourceNotFile {
+                path: path.clone(),
+            },
+            Self::UnsupportedWallpaperFormat { path } => Self::UnsupportedWallpaperFormat {
+                path: path.clone(),
+            },
+            Self::CopyWallpaper { from, to, source } => Self::CopyWallpaper {
+                from: from.clone(),
+                to: to.clone(),
                 source: io::Error::new(source.kind(), source.to_string()),
             },
             Self::Query(err) => Self::Query(err.clone()),

@@ -1,4 +1,5 @@
 use colored::Colorize;
+use std::path::PathBuf;
 use uuid::Uuid;
 
 use crate::cli::ListsCommands;
@@ -29,6 +30,50 @@ pub fn handle_set(name: Vec<String>) -> Result<(), SwpError> {
 
     let applied = operations::apply_wallpaper(&path)?;
     print_applied("Wallpaper applied:", &applied);
+
+    Ok(())
+}
+
+pub fn handle_add(files: Vec<String>) -> Result<(), SwpError> {
+    let mut added = 0usize;
+    let mut failed: Vec<(String, String)> = Vec::new();
+
+    for input in files {
+        let source = PathBuf::from(&input);
+        match wallpaper::import_image(&source) {
+            Ok(destination) => {
+                added += 1;
+                println!(
+                    "{} {}",
+                    "Imported:".green().bold(),
+                    destination
+                        .file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("?")
+                );
+            }
+            Err(err) => failed.push((input, err.to_string())),
+        }
+    }
+
+    println!(
+        "{} {} {}",
+        "Imported".green().bold(),
+        added.to_string().yellow().bold(),
+        "wallpaper(s).".green().bold()
+    );
+
+    if !failed.is_empty() {
+        println!(
+            "{} {} {}",
+            "Failed:".yellow().bold(),
+            failed.len().to_string().yellow().bold(),
+            "input(s).".yellow().bold()
+        );
+        for (input, reason) in failed {
+            println!("  {} {}", input.cyan(), reason.dimmed());
+        }
+    }
 
     Ok(())
 }

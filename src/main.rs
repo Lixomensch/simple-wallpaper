@@ -16,6 +16,7 @@ fn run() -> Result<(), SwpError> {
     let app = Cli::parse();
 
     match app.command {
+        Commands::Add { files } => cli::handlers::handle_add(files),
         Commands::Set { name } => cli::handlers::handle_set(name),
         Commands::Random => cli::handlers::handle_random(),
         Commands::Wallpapers { plain } => cli::handlers::handle_wallpapers(plain),

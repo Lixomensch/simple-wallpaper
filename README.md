@@ -32,7 +32,7 @@ Managed wallpapers live in:
 ~/.local/share/swp/wallpapers/
 ```
 
-Copy or symlink your images there. Subdirectories are supported.
+Use `swp add` to import images there (subdirectories are supported).
 Run `swp path` to print the full path.
 
 Supported formats: `jpg`, `jpeg`, `png`, `webp`, `bmp`, `avif`.
@@ -49,6 +49,16 @@ swp <COMMAND>
 swp set floresta.jpg          # lookup by filename in the managed directory
 swp set /home/user/bg.png     # apply any image by absolute path
 ```
+
+### add — import image files into the managed directory
+
+```bash
+swp add /home/user/Pictures/bg1.jpg
+swp add ~/Pictures/bg1.jpg ~/Pictures/bg2.png
+```
+
+If a filename already exists, `swp` keeps both files by appending a numeric
+suffix (for example `bg1_1.jpg`).
 
 ### random — apply a random wallpaper
 
