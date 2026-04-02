@@ -31,6 +31,13 @@ pub enum SwpError {
         source: io::Error,
     },
 
+    #[error("Failed to remove wallpaper {path}: {source}")]
+    RemoveWallpaper {
+        path: PathBuf,
+        #[source]
+        source: io::Error,
+    },
+
     #[error(transparent)]
     Query(#[from] QueryError),
 
@@ -72,6 +79,10 @@ impl Clone for SwpError {
             Self::CopyWallpaper { from, to, source } => Self::CopyWallpaper {
                 from: from.clone(),
                 to: to.clone(),
+                source: io::Error::new(source.kind(), source.to_string()),
+            },
+            Self::RemoveWallpaper { path, source } => Self::RemoveWallpaper {
+                path: path.clone(),
                 source: io::Error::new(source.kind(), source.to_string()),
             },
             Self::Query(err) => Self::Query(err.clone()),

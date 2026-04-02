@@ -60,6 +60,17 @@ swp add ~/Pictures/bg1.jpg ~/Pictures/bg2.png
 If a filename already exists, `swp` keeps both files by appending a numeric
 suffix (for example `bg1_1.jpg`).
 
+### rmv — remove one wallpaper from the managed directory
+
+```bash
+swp rmv floresta.jpg        # remove by filename (with confirmation)
+swp rmv                     # interactive picker + confirmation
+swp rmv floresta.jpg -f     # skip confirmation
+swp rmv floresta.jpg --force
+```
+
+This command removes a single wallpaper file at a time.
+
 ### random — apply a random wallpaper
 
 ```bash

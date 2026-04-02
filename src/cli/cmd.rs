@@ -131,3 +131,18 @@ pub fn pick_from_list(list_name: &str) -> Result<Uuid, SwpError> {
         })
         .ok_or(SelectionError::InvalidSelection.into())
 }
+
+pub fn confirm_removal(wallpaper_name: &str) -> Result<bool, SwpError> {
+    inquire::Confirm::new(&format!("Remove '{wallpaper_name}'?"))
+        .with_default(false)
+        .with_help_message("y/n  •  Enter to confirm")
+        .prompt()
+        .map_err(|e| match e {
+            inquire::InquireError::OperationCanceled
+            | inquire::InquireError::OperationInterrupted => SelectionError::Canceled,
+            other => SelectionError::PromptFailure {
+                message: other.to_string(),
+            },
+        })
+        .map_err(Into::into)
+}

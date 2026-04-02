@@ -3,13 +3,13 @@ use std::path::PathBuf;
 use uuid::Uuid;
 
 use crate::cli::ListsCommands;
-use crate::cli::cmd::{interactive_pick, resolve_set_input};
+use crate::cli::cmd::{confirm_removal, interactive_pick, resolve_set_input};
 use crate::core::lists;
 use crate::core::lists_play;
 use crate::core::operations;
 use crate::core::playback_manager;
 use crate::core::wallpaper;
-use crate::error::{ListError, SwpError};
+use crate::error::{ListError, SelectionError, SwpError};
 
 fn print_applied(prefix: &str, path: &std::path::Path) {
     println!(
@@ -74,6 +74,49 @@ pub fn handle_add(files: Vec<String>) -> Result<(), SwpError> {
             println!("  {} {}", input.cyan(), reason.dimmed());
         }
     }
+
+    Ok(())
+}
+
+pub fn handle_rmv(name: Option<String>, force: bool) -> Result<(), SwpError> {
+    let path = match name {
+        Some(name) if name.trim().is_empty() => interactive_pick(),
+        Some(name) => resolve_set_input(name.trim()),
+        None => interactive_pick(),
+    };
+
+    let path = match path {
+        Ok(path) => path,
+        Err(SwpError::Selection(SelectionError::Canceled)) => {
+            println!("{}", "Canceled.".yellow().bold());
+            return Ok(());
+        }
+        Err(err) => return Err(err),
+    };
+
+    if !force {
+        let display_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("?");
+        let confirmed = match confirm_removal(display_name) {
+            Ok(value) => value,
+            Err(SwpError::Selection(SelectionError::Canceled)) => {
+                println!("{}", "Canceled.".yellow().bold());
+                return Ok(());
+            }
+            Err(err) => return Err(err),
+        };
+
+        if !confirmed {
+            println!("{}", "Canceled.".yellow().bold());
+            return Ok(());
+        }
+    }
+
+    wallpaper::remove_image(&path)?;
+    println!(
+        "{} {}",
+        "Removed:".green().bold(),
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("?")
+    );
 
     Ok(())
 }

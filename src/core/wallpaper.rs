@@ -84,6 +84,25 @@ pub fn import_image(source: &Path) -> Result<PathBuf, SwpError> {
     Ok(destination)
 }
 
+pub fn remove_image(path: &Path) -> Result<(), SwpError> {
+    if !path.exists() {
+        return Err(SwpError::WallpaperSourceNotFound {
+            path: path.to_path_buf(),
+        });
+    }
+
+    if !path.is_file() {
+        return Err(SwpError::WallpaperSourceNotFile {
+            path: path.to_path_buf(),
+        });
+    }
+
+    fs::remove_file(path).map_err(|source| SwpError::RemoveWallpaper {
+        path: path.to_path_buf(),
+        source,
+    })
+}
+
 pub fn is_image(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
@@ -207,6 +226,29 @@ mod tests {
 
         let path = next_available_path(&dir, "city.jpg");
         assert!(path.ends_with("city_2.jpg"));
+
+        fs::remove_dir_all(&dir).expect("temp test dir should be removable");
+    }
+
+    #[test]
+    fn remove_image_deletes_existing_file() {
+        let dir = test_dir();
+        let image = dir.join("remove-me.jpg");
+        fs::write(&image, b"x").expect("file should be writable");
+
+        super::remove_image(&image).expect("remove should succeed");
+        assert!(!image.exists());
+
+        fs::remove_dir_all(&dir).expect("temp test dir should be removable");
+    }
+
+    #[test]
+    fn remove_image_fails_for_missing_file() {
+        let dir = test_dir();
+        let missing = dir.join("missing.jpg");
+
+        let result = super::remove_image(&missing);
+        assert!(result.is_err());
 
         fs::remove_dir_all(&dir).expect("temp test dir should be removable");
     }

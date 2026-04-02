@@ -27,6 +27,12 @@ pub enum Commands {
         #[arg(required = true, num_args = 1.., value_name = "FILE")]
         files: Vec<String>,
     },
+    Rmv {
+        #[arg(value_name = "NAME")]
+        name: Option<String>,
+        #[arg(short, long)]
+        force: bool,
+    },
     Set {
         #[arg(num_args = 0.., value_name = "NAME")]
         name: Vec<String>,
