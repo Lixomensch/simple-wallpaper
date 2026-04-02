@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [workspace]
-members = [".", "src/cli", "src/core", "src/gui"]
+members = [".", "src/cli", "src/core"]
 resolver = "2"
 
 [[bin]]
@@ -16,4 +16,3 @@ clap     = { version = "4.5.53", features = ["derive"] }
 colored  = "3.1.1"
 simple-wallpaper-cli = { path = "src/cli" }
 simple-wallpaper-core = { path = "src/core" }
-simple-wallpaper-gui = { path = "src/gui" }

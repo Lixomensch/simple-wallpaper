@@ -37,7 +37,6 @@ pub enum Commands {
         command: Option<ListsCommands>,
     },
     Path,
-    Gui,
 }
 
 #[derive(Subcommand)]

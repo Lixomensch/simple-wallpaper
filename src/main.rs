@@ -2,7 +2,6 @@ use clap::Parser;
 use colored::Colorize;
 use simple_wallpaper_cli::{self as cli, Cli, Commands};
 use simple_wallpaper_core::{self as core, SwpError};
-use simple_wallpaper_gui as gui;
 
 fn main() {
     if let Err(e) = run() {
@@ -22,6 +21,5 @@ fn run() -> Result<(), SwpError> {
         Commands::Wallpapers { plain } => cli::handlers::handle_wallpapers(plain),
         Commands::Lists { command } => cli::handlers::handle_lists(command),
         Commands::Path => cli::handlers::handle_path(),
-        Commands::Gui => gui::launch(),
     }
 }

@@ -29,9 +29,6 @@ pub enum SwpError {
     #[error(transparent)]
     List(#[from] ListError),
 
-    #[error("Failed to launch GUI: {message}")]
-    GuiLaunch { message: String },
-
     #[error("Thumbnail error: {message}")]
     Thumbnail { message: String },
 }
@@ -48,9 +45,6 @@ impl Clone for SwpError {
             Self::Interval(err) => Self::Interval(err.clone()),
             Self::Selection(err) => Self::Selection(err.clone()),
             Self::List(err) => Self::List(err.clone()),
-            Self::GuiLaunch { message } => Self::GuiLaunch {
-                message: message.clone(),
-            },
             Self::Thumbnail { message } => Self::Thumbnail {
                 message: message.clone(),
             },
@@ -108,14 +102,11 @@ impl Clone for BackendError {
             },
             Self::WaylandNoCompatibleBackend => Self::WaylandNoCompatibleBackend,
             Self::CommandSpawn { tool, source, help } => Self::CommandSpawn {
-                tool: *tool,
+                tool,
                 source: io::Error::new(source.kind(), source.to_string()),
-                help: *help,
+                help,
             },
-            Self::CommandFailed { tool, code } => Self::CommandFailed {
-                tool: *tool,
-                code: *code,
-            },
+            Self::CommandFailed { tool, code } => Self::CommandFailed { tool, code: *code },
             Self::SwwwFailed { code } => Self::SwwwFailed { code: *code },
         }
     }

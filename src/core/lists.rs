@@ -427,10 +427,10 @@ pub fn remove_wallpapers(name: &str, paths: &[PathBuf], ids: &[Uuid]) -> Result<
     for path in paths {
         let relative = to_relative_wallpaper_path(path)?;
         let key = normalize_relative_path(&relative);
-        if let Some(id_str) = index.by_path.get(&key) {
-            if let Ok(id) = Uuid::parse_str(id_str) {
-                to_remove.insert(id);
-            }
+        if let Some(id_str) = index.by_path.get(&key)
+            && let Ok(id) = Uuid::parse_str(id_str)
+        {
+            to_remove.insert(id);
         }
     }
 

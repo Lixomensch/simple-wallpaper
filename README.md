@@ -56,7 +56,56 @@ swp set /home/user/bg.png     # apply any image by absolute path
 swp random
 ```
 
-### lists play — rotate wallpapers at a fixed interval
+### lists — manage wallpaper collections
+
+```bash
+swp lists
+```
+
+Shows all available lists.
+
+#### lists create
+
+```bash
+swp lists create my-favorites
+```
+
+Creates a new list.
+
+#### lists delete
+
+```bash
+swp lists delete my-favorites
+```
+
+Deletes a list.
+
+#### lists show
+
+```bash
+swp lists show my-favorites
+swp lists show my-favorites --plain
+```
+
+Shows wallpapers in a list.
+
+#### lists add
+
+```bash
+swp lists add my-favorites floresta.jpg praia.png
+```
+
+Adds wallpapers to a list.
+
+#### lists remove
+
+```bash
+swp lists remove my-favorites floresta.jpg
+```
+
+Removes wallpapers from a list by name or UUID.
+
+#### lists play — rotate wallpapers at a fixed interval
 
 ```bash
 swp lists play my-favorites          # play from a specific list

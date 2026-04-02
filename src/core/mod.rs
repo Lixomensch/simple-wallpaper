@@ -1,6 +1,5 @@
 pub use crate as core;
 
-pub mod async_bridge;
 pub mod backends;
 pub mod error;
 pub mod lists;
