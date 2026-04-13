@@ -8,7 +8,6 @@ pub mod operations;
 pub mod playback_manager;
 pub mod playback_state;
 pub mod query;
-pub mod thumbnail;
 pub mod wallpaper;
 
 pub use error::{BackendError, IntervalError, ListError, QueryError, SelectionError, SwpError};

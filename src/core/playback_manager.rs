@@ -160,10 +160,11 @@ pub fn stop_playback() -> Result<(), SwpError> {
     Ok(())
 }
 
+#[allow(clippy::manual_is_multiple_of)]
 fn format_interval(interval_seconds: u64) -> String {
-    if interval_seconds.is_multiple_of(3600) {
+    if interval_seconds % 3600 == 0 {
         format!("{}h", interval_seconds / 3600)
-    } else if interval_seconds.is_multiple_of(60) {
+    } else if interval_seconds % 60 == 0 {
         format!("{}m", interval_seconds / 60)
     } else {
         format!("{}s", interval_seconds)

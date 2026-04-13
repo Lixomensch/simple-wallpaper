@@ -7,7 +7,7 @@ A minimal CLI wallpaper manager for Arch Linux (and other Linux desktops).
 | Desktop / WM  | Backend tool                  | Install (Arch)              |
 |---------------|-------------------------------|-----------------------------|
 | KDE Plasma    | `plasma-apply-wallpaperimage` | `plasma-workspace` (built-in) |
-| GNOME / Cinnamon / Budgie | `gsettings`      | built-in                    |
+| GNOME / Cinnamon / Budgie / Unity / Pantheon | `gsettings` | built-in |
 | Hyprland      | `swww`                        | `sudo pacman -S swww`       |
 | Sway          | `swaybg`                      | `sudo pacman -S swaybg`     |
 | X11 (any WM)  | `feh`                         | `sudo pacman -S feh`        |
@@ -16,8 +16,31 @@ The correct backend is chosen automatically at runtime via `XDG_CURRENT_DESKTOP`
 
 ## Installation
 
+### Arch Linux (PKGBUILD)
+
+Download the `PKGBUILD` from the
+[latest release](https://github.com/Lixomensch/simple-wallpaper/releases/latest)
+and run:
+
 ```bash
-git clone https://github.com/youruser/simple-wallpaper
+makepkg -si
+```
+
+### Debian / Ubuntu (.deb)
+
+Download the `.deb` package from the
+[latest release](https://github.com/Lixomensch/simple-wallpaper/releases/latest)
+and install it:
+
+```bash
+sudo dpkg -i swp_amd64.deb      # x86_64
+sudo dpkg -i swp_arm64.deb      # aarch64
+```
+
+### Manual (cargo)
+
+```bash
+git clone https://github.com/Lixomensch/simple-wallpaper
 cd simple-wallpaper
 cargo install --path .
 ```
@@ -48,6 +71,7 @@ swp <COMMAND>
 ```bash
 swp set floresta.jpg          # lookup by filename in the managed directory
 swp set /home/user/bg.png     # apply any image by absolute path
+swp set                       # interactive picker
 ```
 
 ### add — import image files into the managed directory
@@ -129,10 +153,10 @@ Removes wallpapers from a list by name or UUID.
 #### lists play — start wallpaper rotation in the background
 
 ```bash
-swp lists play my-favorites          # play from a specific list
-swp lists play my-favorites --interval 30s
-swp lists play --interval 5m         # no list: direct filesystem mode
-swp lists play --interval 1h
+swp lists play my-favorites              # play from a specific list (default: 15m)
+swp lists play my-favorites -i 30s       # custom interval
+swp lists play my-favorites --interval 5m
+swp lists play --interval 1h             # no list: direct filesystem mode
 ```
 
 The command returns immediately and keeps running in the background.
@@ -150,6 +174,7 @@ Stops the active playback process and clears the persisted state.
 
 ```bash
 swp wallpapers
+swp wallpapers --plain        # one filename per line, no formatting
 ```
 
 ### path — print the wallpaper directory

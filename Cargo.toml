@@ -1,7 +1,13 @@
 [package]
 name = "simple-wallpaper"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2024"
+description = "A minimal CLI wallpaper manager for Linux"
+license = "Apache-2.0"
+repository = "https://github.com/Lixomensch/simple-wallpaper"
+readme = "README.md"
+keywords = ["wallpaper", "linux", "cli"]
+categories = ["command-line-utilities"]
 
 [workspace]
 members = [".", "src/cli", "src/core"]
@@ -16,3 +22,16 @@ clap     = { version = "4.5.53", features = ["derive"] }
 colored  = "3.1.1"
 simple-wallpaper-cli = { path = "src/cli" }
 simple-wallpaper-core = { path = "src/core" }
+
+[package.metadata.deb]
+maintainer = "João Pedro Lemes Queiroz"
+copyright = "2026, João Pedro Lemes Queiroz"
+depends = "$auto"
+section = "utils"
+priority = "optional"
+assets = [
+    ["target/release/swp", "usr/local/bin/", "755"],
+    ["README.md",           "usr/share/doc/simple-wallpaper/README.md", "644"],
+    ["LICENSE",             "usr/share/doc/simple-wallpaper/LICENSE",    "644"],
+    ["systemd/swp-resume.service", "usr/share/doc/simple-wallpaper/swp-resume.service", "644"],
+]

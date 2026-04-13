@@ -55,9 +55,6 @@ pub enum SwpError {
 
     #[error(transparent)]
     Playback(#[from] PlaybackError),
-
-    #[error("Thumbnail error: {message}")]
-    Thumbnail { message: String },
 }
 
 impl Clone for SwpError {
@@ -67,15 +64,15 @@ impl Clone for SwpError {
             Self::CreateWallpapersDir { source } => Self::CreateWallpapersDir {
                 source: io::Error::new(source.kind(), source.to_string()),
             },
-            Self::WallpaperSourceNotFound { path } => Self::WallpaperSourceNotFound {
-                path: path.clone(),
-            },
-            Self::WallpaperSourceNotFile { path } => Self::WallpaperSourceNotFile {
-                path: path.clone(),
-            },
-            Self::UnsupportedWallpaperFormat { path } => Self::UnsupportedWallpaperFormat {
-                path: path.clone(),
-            },
+            Self::WallpaperSourceNotFound { path } => {
+                Self::WallpaperSourceNotFound { path: path.clone() }
+            }
+            Self::WallpaperSourceNotFile { path } => {
+                Self::WallpaperSourceNotFile { path: path.clone() }
+            }
+            Self::UnsupportedWallpaperFormat { path } => {
+                Self::UnsupportedWallpaperFormat { path: path.clone() }
+            }
             Self::CopyWallpaper { from, to, source } => Self::CopyWallpaper {
                 from: from.clone(),
                 to: to.clone(),
@@ -91,16 +88,13 @@ impl Clone for SwpError {
             Self::Selection(err) => Self::Selection(err.clone()),
             Self::List(err) => Self::List(err.clone()),
             Self::Playback(err) => Self::Playback(err.clone()),
-            Self::Thumbnail { message } => Self::Thumbnail {
-                message: message.clone(),
-            },
         }
     }
 }
 
 #[derive(Debug, Error, Clone)]
 pub enum QueryError {
-    #[error("No wallpaper found for '{query}'.\nUse `swp list` to see available ones.")]
+    #[error("No wallpaper found for '{query}'.\nUse `swp wallpapers` to see available ones.")]
     NoMatches { query: String },
 
     #[error("No wallpaper found. Add images to `swp path` first.")]
