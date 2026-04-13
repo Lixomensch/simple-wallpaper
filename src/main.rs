@@ -1,0 +1,27 @@
+use clap::Parser;
+use colored::Colorize;
+use simple_wallpaper_cli::{self as cli, Cli, Commands};
+use simple_wallpaper_core::{self as core, SwpError};
+
+fn main() {
+    if let Err(e) = run() {
+        eprintln!("{} {}", "Error:".red().bold(), e);
+        std::process::exit(1);
+    }
+}
+
+fn run() -> Result<(), SwpError> {
+    core::wallpaper::init()?;
+
+    let app = Cli::parse();
+
+    match app.command {
+        Commands::Add { files } => cli::handlers::handle_add(files),
+        Commands::Rmv { name, force } => cli::handlers::handle_rmv(name, force),
+        Commands::Set { name } => cli::handlers::handle_set(name),
+        Commands::Random => cli::handlers::handle_random(),
+        Commands::Wallpapers { plain } => cli::handlers::handle_wallpapers(plain),
+        Commands::Lists { command } => cli::handlers::handle_lists(command),
+        Commands::Path => cli::handlers::handle_path(),
+    }
+}
